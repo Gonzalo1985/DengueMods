@@ -11,15 +11,15 @@ library("randomForest")
 library("e1071")
 library("caret")
 
-path.ppal <- "/home/gdiaz/Documentos/Desarrollos/DENGUE/"
+path.ppal <- "./"
 source(paste0(path.ppal, "fcts_DENGUE.R"))
 
 # ------------------------------------------------------------------------------
 # PREPARACION DE BASE METEOROLOGICA
 data <- BASE.meteo(path.data = path.ppal,
-                   meteo.file = "Base_Tmin_Prcp.csv",
-                   id.int = 87121,
-                   bhoa.file = "bhoa_Tucuman.csv")
+                   meteo.file = "meteo/Base_Tmin_Prcp.csv",
+                   id.int = 87155,
+                   bhoa.file = "bhoa/bhoa_Tucuman.csv")
 
 colnames(data) <- c('Fecha', 'Estacion', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 
@@ -34,18 +34,18 @@ data.training <- rbind(data.training.2019.2020, data.training.2022.2023)
 
 # ------------------------------------------------------------------------------
 # PREPARACION DE BASE DE SALUD: DENGUE
-cases <- read_excel(paste0(path.ppal, "Casos Temporada 23_24 hasta SE21.xlsx"), sheet = 1)
+cases <- read_excel(paste0(path.ppal, "casos/Casos Temporada 23_24 hasta SE21.xlsx"), sheet = 1)
 cases[which(is.na(cases$Autóctono)), "Autóctono"] <- 0
 
-cases.old <- read_excel(paste0(path.ppal, "Casos Temporada 19_20 a 22_23.xlsx"), sheet = 1)
+cases.old <- read_excel(paste0(path.ppal, "casos/Casos Temporada 19_20 a 22_23.xlsx"), sheet = 1)
 cases.old[which(is.na(cases.old$Autóctono)), "Autóctono"] <- 0
 
 #cases.station <- cases[which(cases$ID_LOC_INDEC_RESIDENCIA2 == "82084270"),]  # ROSARIO
 #cases.station <- cases[which(cases$ID_LOC_INDEC_RESIDENCIA2 == "02002010"),]  # CABA
-cases.station.old <- cases.old[which(cases.old$ID_LOC_INDEC_RESIDENCIA2 == "90084010"),]  # TUCUMAN
-cases.station <- cases[which(cases$ID_LOC_INDEC_RESIDENCIA2 == "90084010"),]  # TUCUMAN
-#cases.station.old <- cases.old[which(cases.old$ID_LOC_INDEC_RESIDENCIA2 == "22140060"),]  # RESISTENCIA
-#cases.station <- cases[which(cases$ID_LOC_INDEC_RESIDENCIA2 == "22140060"),]  # RESISTENCIA
+#cases.station.old <- cases.old[which(cases.old$ID_LOC_INDEC_RESIDENCIA2 == "90084010"),]  # TUCUMAN
+#cases.station <- cases[which(cases$ID_LOC_INDEC_RESIDENCIA2 == "90084010"),]  # TUCUMAN
+cases.station.old <- cases.old[which(cases.old$ID_LOC_INDEC_RESIDENCIA2 == "22140060"),]  # RESISTENCIA
+cases.station <- cases[which(cases$ID_LOC_INDEC_RESIDENCIA2 == "22140060"),]  # RESISTENCIA
 #cases.station.old <- cases.old[which(cases.old$ID_LOC_INDEC_RESIDENCIA2 == "10049030"),]  # CATAMARCA
 #cases.station <- cases[which(cases$ID_LOC_INDEC_RESIDENCIA2 == "10049030"),]  # CATAMARCA
 

@@ -11,7 +11,7 @@ library("randomForest")
 library("e1071")
 library("caret")
 
-path.ppal <- "/home/gdiaz/Documentos/Desarrollos/DengueMods/"
+path.ppal <- "./"
 source("./fcts_DENGUE.R")
 
 # ------------------------------------------------------------------------------
