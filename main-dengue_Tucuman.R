@@ -17,22 +17,22 @@ source("./fcts_DENGUE.R")
 # ------------------------------------------------------------------------------
 # PREPARACION DE BASE METEOROLOGICA
 data <- BASE.meteo(path.data = path.ppal,
-                   meteo.file = "meteo/Base_Tmin_Prcp.csv",
+                   meteo.file = "meteo/Base_Tmin_Prcp_completo.csv",
                    id.int = 87121,
-                   bhoa.file = "bhoa/bhoa_Tucuman.csv")
+                   bhoa.file = "operativo/87121 - Tucuman - bhoa.csv")
 
 colnames(data) <- c('Fecha', 'Estacion', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 
 data.training.2019.2020 <- data[which(data$Fecha >= "2019-07-28" & data$Fecha <= "2020-07-25"),]
 data.training.2022.2023 <- data[which(data$Fecha >= "2021-07-31" & data$Fecha <= "2022-07-29"),]
-data.verification       <- data[which(data$Fecha >= "2023-07-30" & data$Fecha <= "2024-05-25"),]
+data.verification       <- data[which(data$Fecha >= "2023-07-30" & data$Fecha <= "2024-07-27"),]
 
 data.training <- rbind(data.training.2019.2020, data.training.2022.2023)
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # PREPARACION DE BASE DE SALUD: DENGUE
-cases <- read_excel(paste0(path.ppal, "casos/Casos Temporada 23_24 hasta SE21.xlsx"), sheet = 1)
+cases <- read_excel(paste0(path.ppal, "casos/Casos Temporada 23_24.xlsx"), sheet = 1)
 cases[which(is.na(cases$Autóctono)), "Autóctono"] <- 0
 
 cases.old <- read_excel(paste0(path.ppal, "casos/Casos Temporada 19_20 a 22_23.xlsx"), sheet = 1)
@@ -59,7 +59,7 @@ cases.station.old <- cases.station.old[c(inicio.ola.1:final.ola.1, inicio.ola.2:
 
 data.training$Semana <- sort(rep(1:104,7))
 
-data.verification$Semana <- c(sort(rep(31:52,7)), sort(rep(1:21,7)))
+data.verification$Semana <- c(sort(rep(31:52,7)), sort(rep(1:30,7)))
 
 prcp.station.semanal <- data.training %>% 
   group_by(Semana) %>%
@@ -173,26 +173,26 @@ etp.station.semanal <- data.verification %>%
   summarise(Media = mean(ETP))
 
 
-cases.station$prcp.semanal <- c(prcp.station.semanal$Suma[31:43],
+cases.station$prcp.semanal <- c(prcp.station.semanal$Suma[31:52],
                                 prcp.station.semanal$Suma[1:30])
 
-cases.station$tmin.semanal <- c(tmin.station.semanal$Media[31:43],
+cases.station$tmin.semanal <- c(tmin.station.semanal$Media[31:52],
                                 tmin.station.semanal$Media[1:30])
 
-cases.station$hr2.semanal <- c(HR2.station.semanal$Media[31:43],
+cases.station$hr2.semanal <- c(HR2.station.semanal$Media[31:52],
                                HR2.station.semanal$Media[1:30])
 
-cases.station$almc.semanal <- c(almc.station.semanal$Media[31:43],
+cases.station$almc.semanal <- c(almc.station.semanal$Media[31:52],
                                 almc.station.semanal$Media[1:30])
 
-cases.station$etr.semanal <- c(etr.station.semanal$Media[31:43],
+cases.station$etr.semanal <- c(etr.station.semanal$Media[31:52],
                                etr.station.semanal$Media[1:30])
 
-cases.station$etp.semanal <- c(etp.station.semanal$Media[31:43],
+cases.station$etp.semanal <- c(etp.station.semanal$Media[31:52],
                                etp.station.semanal$Media[1:30])
 
 
-tabla.verification <- data.frame(Dates = as.POSIXct(seq.Date(as.Date("2023-01-01"), as.Date("2023-02-12"), 1)),
+tabla.verification <- data.frame(Dates = as.POSIXct(seq.Date(as.Date("2023-07-30"), as.Date("2024-07-27"), 7)),
                                   Semana = unique(cases$ANIO_SEPI_MIN),
                                   Casos = cases.station$Autóctono,
                                   Prcp = cases.station$prcp.semanal,
@@ -201,18 +201,18 @@ tabla.verification <- data.frame(Dates = as.POSIXct(seq.Date(as.Date("2023-01-01
                                   Almc = cases.station$almc.semanal,
                                   ETR = cases.station$etr.semanal,
                                   ETP = cases.station$etp.semanal,
-                                  Prcp.lag1 = c(NA, cases.station$prcp.semanal[1:42]),
-                                  Tmin.lag1 = c(NA, cases.station$tmin.semanal[1:42]),
-                                  HR2.lag1 = c(NA, cases.station$hr2.semanal[1:42]),
-                                  Almc.lag1 = c(NA, cases.station$almc.semanal[1:42]),
-                                  ETR.lag1 = c(NA, cases.station$etr.semanal[1:42]),
-                                  ETP.lag1 = c(NA, cases.station$etp.semanal[1:42]),
-                                  Prcp.lag2 = c(NA, NA, cases.station$prcp.semanal[1:41]),
-                                  Tmin.lag2 = c(NA, NA, cases.station$tmin.semanal[1:41]),
-                                  HR2.lag2 = c(NA, NA, cases.station$hr2.semanal[1:41]),
-                                  Almc.lag2 = c(NA, NA, cases.station$almc.semanal[1:41]),
-                                  ETR.lag2 = c(NA, NA, cases.station$etr.semanal[1:41]),
-                                  ETP.lag2 = c(NA, NA, cases.station$etp.semanal[1:41])
+                                  Prcp.lag1 = c(NA, cases.station$prcp.semanal[1:51]),
+                                  Tmin.lag1 = c(NA, cases.station$tmin.semanal[1:51]),
+                                  HR2.lag1 = c(NA, cases.station$hr2.semanal[1:51]),
+                                  Almc.lag1 = c(NA, cases.station$almc.semanal[1:51]),
+                                  ETR.lag1 = c(NA, cases.station$etr.semanal[1:51]),
+                                  ETP.lag1 = c(NA, cases.station$etp.semanal[1:51]),
+                                  Prcp.lag2 = c(NA, NA, cases.station$prcp.semanal[1:50]),
+                                  Tmin.lag2 = c(NA, NA, cases.station$tmin.semanal[1:50]),
+                                  HR2.lag2 = c(NA, NA, cases.station$hr2.semanal[1:50]),
+                                  Almc.lag2 = c(NA, NA, cases.station$almc.semanal[1:50]),
+                                  ETR.lag2 = c(NA, NA, cases.station$etr.semanal[1:50]),
+                                  ETP.lag2 = c(NA, NA, cases.station$etp.semanal[1:50])
                                  )
 
 aux.1m.lag0 <- tabla.verification %>% mutate(Prcp.1m = rollapply(Prcp, width = 4, FUN = sum, align = "right", fill = NA))
@@ -245,7 +245,7 @@ colnames(tabla.verification)[25] <- c("Prcp.2s")
 colnames(tabla.verification)[26] <- c("Prcp.2s.lag1")
 colnames(tabla.verification)[27] <- c("Prcp.2s.lag2")
 
-tabla.verification <- cbind(tabla.verification, tabla.training$Casos[1:38])
+tabla.verification <- cbind(tabla.verification, tabla.training$Casos)
 #tabla.verification <- cbind(tabla.verification, tabla.training$Casos.anterior[1:38])
 colnames(tabla.verification)[28] <- c("Casos.anterior")
 
@@ -275,7 +275,7 @@ mg.evaluation <- mg.evaluation(input.data = tabla.verification,
                                predictors = var.predictors,
                                var.model = "Casos", lmodel = mg)
 
-
+saveRDS(object = mg, file = "./models/multiple_lineal_model")
 
 
 # ------------------------------------------------------------------------------
@@ -289,7 +289,7 @@ rf.training <- predict(model.rf, tabla.training)
 set.seed(123)
 rf.verification <- predict(model.rf, tabla.verification)
 
-
+saveRDS(object = model.rf, file = "./models/random_forest_model")
 
 # ------------------------------------------------------------------------------
 # MODELO SVM
@@ -302,7 +302,7 @@ svm.training <- predict(model.svm, tabla.training)
 set.seed(123)
 svm.verification <- predict(model.svm, tabla.verification)
 
-
+saveRDS(object = model.svm, file = "./models/svm_model")
 
 
 # ------------------------------------------------------------------------------
@@ -330,14 +330,14 @@ fig <- ggplot() +
   geom_line(data = data.for.print, aes(x = Semana, y = guidance, group = 1, col = "Modelo Multiple Lineal")) +
   
   geom_line(data = data.for.print, aes(x = Semana, y = randomForest.ver, group = 1, col = "Random Forest")) +
-  geom_ribbon(aes(x = index(data.for.print), 
-                  ymin = data.for.print$randomForest.ver - min(model.rf$results$RMSE), 
-                  ymax = data.for.print$randomForest.ver + min(model.rf$results$RMSE), colour = "banda RMSE rf"), alpha = 0.2) +
+  #geom_ribbon(aes(x = index(data.for.print), 
+#                  ymin = data.for.print$randomForest.ver - min(model.rf$results$RMSE), 
+#                  ymax = data.for.print$randomForest.ver + min(model.rf$results$RMSE), colour = "banda RMSE rf"), alpha = 0.2) +
   
   geom_line(data = data.for.print, aes(x = Semana, y = supportVM.ver, group = 1, col = "Support VM")) +
-  geom_ribbon(aes(x = index(data.for.print), 
-                  ymin = data.for.print$supportVM.ver - min(model.svm$results$RMSE), 
-                  ymax = data.for.print$supportVM.ver + min(model.svm$results$RMSE), colour = "banda RMSE svm"), alpha = 0.2) +
+#  geom_ribbon(aes(x = index(data.for.print), 
+#                  ymin = data.for.print$supportVM.ver - min(model.svm$results$RMSE), 
+#                  ymax = data.for.print$supportVM.ver + min(model.svm$results$RMSE), colour = "banda RMSE svm"), alpha = 0.2) +
   
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 

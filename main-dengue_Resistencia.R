@@ -19,7 +19,7 @@ source(paste0(path.ppal, "fcts_DENGUE.R"))
 data <- BASE.meteo(path.data = path.ppal,
                    meteo.file = "meteo/Base_Tmin_Prcp.csv",
                    id.int = 87155,
-                   bhoa.file = "bhoa/bhoa_Tucuman.csv")
+                   bhoa.file = "bhoa/bhoa_Resistencia.csv")
 
 colnames(data) <- c('Fecha', 'Estacion', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 

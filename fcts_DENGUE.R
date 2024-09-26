@@ -3,7 +3,7 @@
 BASE.meteo <- function(path.data = path.data, meteo.file = meteo.file, id.int = id.int, bhoa.file = bhoa.file)
 {
   file1 <- vroom(paste0(path.data, meteo.file), col_types = "nDnnn")
-  file1 <- file1[which(file1$Estacion == id.int), ]
+  file1 <- file1[which(file1$omm_id == id.int), ]
   file2 <- vroom(paste0(path.data, bhoa.file))
   #file2$Fecha <- ymd(paste0(file2$ANUAL,
   #                          sprintf("%02d", file2$MES),
