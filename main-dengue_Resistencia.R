@@ -269,14 +269,14 @@ colnames(tabla.verification)[28] <- c("Casos.anterior")
 tabla.verification$Semana.num <- as.numeric(substr(tabla.verification$Semana, start = 4, stop = 5))
 
 
-var.predictors <- c("Almc.lag2", "ETP.lag2", "Casos.anterior", "Tmin.Count.lag2",
-                    "Prcp.lag2", "Prcp.1m.lag2")
+var.predictors <- c("HR2.lag2", "Almc.lag2", "ETP.lag2", "Casos.anterior", "Tmin.Count.lag2",
+                    "Prcp.1m.lag2")
 
-var.predictors.rf <- c("Almc.lag2", "ETP.lag2", "Casos.anterior", "Tmin.Count.lag2",
-                       "Prcp.lag2", "Prcp.1m.lag2")
+var.predictors.rf <- c("HR2.lag2", "Almc.lag2", "ETP.lag2", "Casos.anterior", "Tmin.Count.lag2",
+                       "Prcp.1m.lag2")
 
-var.predictors.svm <- c("Almc.lag2", "ETP.lag2", "Casos.anterior", "Tmin.Count.lag2",
-                        "Prcp.lag2", "Prcp.1m.lag2")
+var.predictors.svm <- c("HR2.lag2", "Almc.lag2", "ETP.lag2", "Casos.anterior", "Tmin.Count.lag2",
+                        "Prcp.1m.lag2")
 
 
 form.string.rf <- as.formula(paste("Casos ~ ", paste(var.predictors.rf, collapse= "+")))
@@ -292,7 +292,7 @@ mg.evaluation <- mg.evaluation(input.data = tabla.verification,
                                predictors = var.predictors,
                                var.model = "Casos", lmodel = mg)
 
-
+saveRDS(object = mg, file = "./models/87155_multiple_lineal_model")
 
 
 # ------------------------------------------------------------------------------
@@ -306,7 +306,7 @@ rf.training <- predict(model.rf, tabla.training)
 set.seed(123)
 rf.verification <- predict(model.rf, tabla.verification)
 
-
+saveRDS(object = model.rf, file = "./models/87155_random_forest_model")
 
 # ------------------------------------------------------------------------------
 # MODELO SVM
@@ -319,7 +319,7 @@ svm.training <- predict(model.svm, tabla.training)
 set.seed(123)
 svm.verification <- predict(model.svm, tabla.verification)
 
-
+saveRDS(object = model.svm, file = "./models/87155_svm_model")
 
 
 # ------------------------------------------------------------------------------

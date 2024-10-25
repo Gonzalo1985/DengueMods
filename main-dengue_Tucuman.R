@@ -14,6 +14,18 @@ library("caret")
 path.ppal <- "./"
 source("./fcts_DENGUE.R")
 
+
+vect <- read.csv("./vectores/vectores_Tucuman_23-24.csv")
+
+vect.mean <- vect %>%
+  group_by(Semana) %>%
+  summarise(IIP = mean(Indice.de.Inmuebles.Positivos),
+            IB = mean(Indice.de.Breteau),
+            IRP = mean(Indice.de.Recipientes.Positivos))
+
+#vect.training <- data.frame(IIP = rep(0, 4), IB = rep(0, 4), IRP = rep(0, 4))
+#vect.training <- rbind(vect.training, vect.mean[,2:4])
+
 # ------------------------------------------------------------------------------
 # PREPARACION DE BASE METEOROLOGICA
 data <- BASE.meteo(path.data = path.ppal,
@@ -146,7 +158,11 @@ colnames(tabla.training)[25] <- c("Prcp.2s")
 colnames(tabla.training)[26] <- c("Prcp.2s.lag1")
 colnames(tabla.training)[27] <- c("Prcp.2s.lag2")
 
-#tabla.training$Semana.num <- as.numeric(substr(tabla.training$Semana, start = 4, stop = 5))
+tabla.training.with.VECT <- merge(tabla.training, vect.mean, by = "Semana", all = TRUE)
+tabla.training.with.VECT <- tabla.training.with.VECT[1:47,]
+tabla.training.with.VECT[is.na(tabla.training.with.VECT)] <- 0
+
+# ------------------------------------------------------------------------------
 
 prcp.station.semanal <- data.verification %>% 
   group_by(Semana) %>%
@@ -249,17 +265,23 @@ tabla.verification <- cbind(tabla.verification, tabla.training$Casos)
 #tabla.verification <- cbind(tabla.verification, tabla.training$Casos.anterior[1:38])
 colnames(tabla.verification)[28] <- c("Casos.anterior")
 
-#tabla.verification$Semana.num <- as.numeric(substr(tabla.verification$Semana, start = 4, stop = 5))
+tabla.verification.with.VECT <- merge(tabla.verification, vect.mean, by = "Semana", all = TRUE)
+tabla.verification.with.VECT <- tabla.verification.with.VECT[19:65,]
+tabla.verification.with.VECT[is.na(tabla.verification.with.VECT)] <- 0
+
+# ------------------------------------------------------------------------------
 
 
+
+# CORRIDA DE MODELOS
 var.predictors <- c("Almc.lag2", "ETP.lag2", "Casos.anterior",
-                    "Prcp.lag2", "Prcp.1m.lag2")
+                    "Prcp.lag2", "Prcp.1m.lag2", "IIP", "IB", "IRP")
 
 var.predictors.rf <- c("Almc.lag2", "ETP.lag2", "Casos.anterior",
-                       "Prcp.lag2", "Prcp.1m.lag2")
+                       "Prcp.lag2", "Prcp.1m.lag2", "IIP", "IB", "IRP")
 
 var.predictors.svm <- c("Almc.lag2", "ETP.lag2", "Casos.anterior",
-                        "Prcp.lag2", "Prcp.1m.lag2")
+                        "Prcp.lag2", "Prcp.1m.lag2", "IIP", "IB", "IRP")
 
 
 form.string.rf <- as.formula(paste("Casos ~ ", paste(var.predictors.rf, collapse= "+")))
@@ -267,42 +289,42 @@ form.string.svm <- as.formula(paste("Casos ~ ", paste(var.predictors.svm, collap
 
 # ------------------------------------------------------------------------------
 # MODELO DE REGRESION LINEAL MULTIPLE
-mg <- multiple.guidance(input.data = tabla.training, predictand = "Casos",
+mg <- multiple.guidance(input.data = tabla.training.with.VECT[,-1], predictand = "Casos",
                         predictors = var.predictors)
 
-mg.evaluation <- mg.evaluation(input.data = tabla.verification,
+mg.evaluation <- mg.evaluation(input.data = tabla.verification.with.VECT[,-1],
                                predictand = "Casos",
                                predictors = var.predictors,
                                var.model = "Casos", lmodel = mg)
 
-saveRDS(object = mg, file = "./models/multiple_lineal_model")
+#saveRDS(object = mg, file = "./models/multiple_lineal_model")
 
 
 # ------------------------------------------------------------------------------
 # MODELO RANDOM FOREST
 set.seed(123)
-model.rf <- OPTI.methods(data = tabla.training, formula = form.string.rf, method1 = "cv", model = "rf")
+model.rf <- OPTI.methods(data = tabla.training.with.VECT, formula = form.string.rf, method1 = "cv", model = "rf")
 
 set.seed(123)
-rf.training <- predict(model.rf, tabla.training)
+rf.training <- predict(model.rf, tabla.training.with.VECT)
 
 set.seed(123)
-rf.verification <- predict(model.rf, tabla.verification)
+rf.verification <- predict(model.rf, tabla.verification.with.VECT)
 
-saveRDS(object = model.rf, file = "./models/random_forest_model")
+#saveRDS(object = model.rf, file = "./models/random_forest_model")
 
 # ------------------------------------------------------------------------------
 # MODELO SVM
 set.seed(123)
-model.svm <- OPTI.methods(data = tabla.training, formula = form.string.svm, method1 = "cv", model = "svmLinear")
+model.svm <- OPTI.methods(data = tabla.training.with.VECT, formula = form.string.svm, method1 = "cv", model = "svmLinear")
 
 set.seed(123)
-svm.training <- predict(model.svm, tabla.training)
+svm.training <- predict(model.svm, tabla.training.with.VECT)
 
 set.seed(123)
-svm.verification <- predict(model.svm, tabla.verification)
+svm.verification <- predict(model.svm, tabla.verification.with.VECT)
 
-saveRDS(object = model.svm, file = "./models/svm_model")
+#saveRDS(object = model.svm, file = "./models/svm_model")
 
 
 # ------------------------------------------------------------------------------
@@ -313,10 +335,10 @@ data.for.print$observation <- as.numeric(data.for.print$observation)
 data.for.print$guidance <- as.numeric(data.for.print$guidance)
 
 data.for.print[data.for.print < 0] <- 0
-#data.for.print$randomForest <- as.numeric(rf.training)
+data.for.print$randomForest <- as.numeric(rf.training)
 data.for.print$randomForest.ver <- as.numeric(rf.verification)
 
-#data.for.print$supportVM <- as.numeric(svm.training)
+data.for.print$supportVM <- as.numeric(svm.training)
 data.for.print$supportVM.ver <- as.numeric(svm.verification)
 
 # valores menores a cero de los modelos forzados a cero
@@ -338,6 +360,8 @@ fig <- ggplot() +
 #  geom_ribbon(aes(x = index(data.for.print), 
 #                  ymin = data.for.print$supportVM.ver - min(model.svm$results$RMSE), 
 #                  ymax = data.for.print$supportVM.ver + min(model.svm$results$RMSE), colour = "banda RMSE svm"), alpha = 0.2) +
+  
+#  scale_y_continuous(limits = c(0, 12500), breaks = seq(0, 12500, by = 2500)) +
   
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
