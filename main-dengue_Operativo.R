@@ -15,17 +15,21 @@ library("caret")
 path.ppal <- "./"
 source(paste0(path.ppal, "fcts_DENGUE.R"))
 
-station.number <- 87121
+station.number <- 87155
+Prcp.1m.Tucu <- c(0.0, 3.1, 3.1, 7.8, 7.8, 4.8, 4.7, 1.7, 11.0, 11.0, 101, 107, 99.0, 125)
+Prcp.1m.Resi <- c(9.0, 58.0, 58.0, 126, 118, 116, 71.0, 71.0, 43.0, 47.0, 74.2, 97.4, 78.4, 74.5)
 
 if (station.number == 87121)
   {filename.meteo <- "87121 - Tucuman - meteo.csv"
    filename.bhoa  <- "87121 - Tucuman - bhoa.csv"
-   LOC.INDEC.number <- "90084010"}
+   LOC.INDEC.number <- "90084010"
+   PRCP.1m.station <- Prcp.1m.Tucu}
 
 if (station.number == 87155)
   {filename.meteo <- "87155 - Resistencia - meteo.csv"
    filename.bhoa  <- "87155 - Resistencia - bhoa.csv"
-   LOC.INDEC.number <- "22140060"}
+   LOC.INDEC.number <- "22140060"
+   PRCP.1m.station <- Prcp.1m.Resi}
 
 
 # levanta datos meteo y bhoa operativos
@@ -100,14 +104,11 @@ tmin.station.count.semanal <- data.operativo %>%
   summarise(Media = mean(Tmin.count, na.rm = TRUE))
 
 
-Prcp.1m.Tucu <- c(0.0, 3.1, 3.1, 7.8, 7.8, 4.8, 4.7, 1.7, 11.0, 11.0, 101, 107, 99.0, 125)
-Prcp.1m.Resi <- c(9.0, 58.0, 58.0, 126, 118, 116, 71.0, 71.0, 43.0, 47.0, 74.2, 97.4, 78.4, 74.5)
-
 tabla <- data.frame(Dates = as.POSIXct(seq.Date(as.Date("2024-07-28"), as.Date("2024-11-02"), 7)),
                     Semana = cases.station$ANIO_SEPI_MIN,
                     Casos.anterior = cases.station$Autóctono,
                     Prcp.lag2 = prcp.station.semanal$Suma,
-                    Prcp.1m.lag2 = Prcp.1m.Tucu,
+                    Prcp.1m.lag2 = PRCP.1m.station,
                     Tmin.lag2 = tmin.station.semanal$Media,
                     HR2.lag2 = HR2.station.semanal$Media,
                     Almc.lag2 = almc.station.semanal$Media,
@@ -148,7 +149,7 @@ fig <- ggplot() +
   scale_fill_manual(values = c("multiple_linear" = "#D55E00", "random_forest" = "#0072B2", "support_vm" = "#009E73")) +
   
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16)) +
-  theme(legend.text = element_text(size = 14)) + 
+  theme(legend.text = element_text(size = 13)) + 
   
   labs(x = "Semana", y = "Casos", fill = "Modelos")
 
