@@ -17,13 +17,16 @@ source(paste0(path.ppal, "fcts_DENGUE.R"))
 # ------------------------------------------------------------------------------
 # PREPARACION DE BASE METEOROLOGICA
 data <- BASE.meteo(path.data = path.ppal,
-                   meteo.file = "meteo/Base_Tmin_Prcp.csv",
+                   meteo.file = "meteo/Base_Tmin_Prcp_completo.txt",
                    id.int = 87155,
                    bhoa.file = "bhoa/bhoa_Resistencia.csv")
 
 colnames(data) <- c('Fecha', 'Estacion', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 
-data <- data %>% mutate(Tmin.count = rollapply(Tmin, width = 7, FUN = function(x) sum(x < 10), align = "right", fill = NA))
+#data <- data %>% mutate(Tmin.count = rollapply(Tmin, width = 7, FUN = function(x) sum(x < 10), align = "right", fill = NA))
+
+# 7 dias consecutivos por debajo de un umbral
+data <- data %>% mutate(Tmin.count = as.integer(rollapply(Tmin, width = 7, FUN = function(x) all(x < 10), align = "right", fill = NA)))
 
 data.training.2019.2020 <- data[which(data$Fecha >= "2019-07-28" & data$Fecha <= "2020-07-25"),]
 data.training.2022.2023 <- data[which(data$Fecha >= "2021-07-31" & data$Fecha <= "2022-07-29"),]
@@ -89,7 +92,7 @@ etp.station.semanal <- data.training %>%
 
 tmin.station.count.semanal <- data.training %>% 
   group_by(Semana) %>%
-  summarise(Media = mean(Tmin.count))
+  summarise(Media = sum(Tmin.count))
 
 
 tabla.training <- data.frame(Dates = as.POSIXct(seq.Date(as.Date("2023-01-01"), as.Date("2023-04-14"), 1)),
@@ -183,7 +186,7 @@ etp.station.semanal <- data.verification %>%
 
 tmin.station.count.semanal <- data.verification %>% 
   group_by(Semana) %>%
-  summarise(Media = mean(Tmin.count))
+  summarise(Media = sum(Tmin.count))
 
 cases.station$prcp.semanal <- c(prcp.station.semanal$Suma[31:43],
                                 prcp.station.semanal$Suma[1:30])
@@ -292,7 +295,7 @@ mg.evaluation <- mg.evaluation(input.data = tabla.verification,
                                predictors = var.predictors,
                                var.model = "Casos", lmodel = mg)
 
-saveRDS(object = mg, file = "./models/87155_multiple_lineal_model")
+#saveRDS(object = mg, file = "./models/87155_multiple_lineal_model")
 
 
 # ------------------------------------------------------------------------------
@@ -306,7 +309,7 @@ rf.training <- predict(model.rf, tabla.training)
 set.seed(123)
 rf.verification <- predict(model.rf, tabla.verification)
 
-saveRDS(object = model.rf, file = "./models/87155_random_forest_model")
+#saveRDS(object = model.rf, file = "./models/87155_random_forest_model")
 
 # ------------------------------------------------------------------------------
 # MODELO SVM
@@ -319,7 +322,7 @@ svm.training <- predict(model.svm, tabla.training)
 set.seed(123)
 svm.verification <- predict(model.svm, tabla.verification)
 
-saveRDS(object = model.svm, file = "./models/87155_svm_model")
+#saveRDS(object = model.svm, file = "./models/87155_svm_model")
 
 
 # ------------------------------------------------------------------------------
