@@ -292,14 +292,17 @@ tabla.verification.with.VECT[is.na(tabla.verification.with.VECT)] <- 0
 
 
 # CORRIDA DE MODELOS
-var.predictors <- c("Almc.lag2", "ETP.lag2", "Casos.anterior",
-                    "Prcp.lag2", "Prcp.1m.lag2", "IIP", "IB", "IRP", "Tmin.Count.lag2")
+var.predictors <- c("Almc.lag2", "ETP.lag2", "Casos.anterior", "Prcp.lag2", "Prcp.1m.lag2",
+                    "IIP", "IB", "IRP",
+                    "Tmin.Count.lag2")
 
-var.predictors.rf <- c("Almc.lag2", "ETP.lag2", "Casos.anterior",
-                       "Prcp.lag2", "Prcp.1m.lag2", "IIP", "IB", "IRP", "Tmin.Count.lag2")
+var.predictors.rf <- c("Almc.lag2", "ETP.lag2", "Casos.anterior", "Prcp.lag2", "Prcp.1m.lag2",
+                       "IIP", "IB", "IRP",
+                       "Tmin.Count.lag2")
 
-var.predictors.svm <- c("Almc.lag2", "ETP.lag2", "Casos.anterior",
-                        "Prcp.lag2", "Prcp.1m.lag2", "IIP", "IB", "IRP", "Tmin.Count.lag2")
+var.predictors.svm <- c("Almc.lag2", "ETP.lag2", "Casos.anterior", "Prcp.lag2", "Prcp.1m.lag2",
+                        "IIP", "IB", "IRP",
+                        "Tmin.Count.lag2")
 
 
 form.string.rf <- as.formula(paste("Casos ~ ", paste(var.predictors.rf, collapse= "+")))
