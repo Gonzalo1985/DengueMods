@@ -362,6 +362,7 @@ fig <- ggplot() +
   geom_line(data = data.for.print, aes(x = Semana, y = guidance, group = 1, col = "Modelo Multiple Lineal")) +
   
   geom_line(data = data.for.print, aes(x = Semana, y = randomForest.ver, group = 1, col = "Random Forest")) +
+  
   #geom_ribbon(aes(x = index(data.for.print), 
 #                  ymin = data.for.print$randomForest.ver - min(model.rf$results$RMSE), 
 #                  ymax = data.for.print$randomForest.ver + min(model.rf$results$RMSE), colour = "banda RMSE rf"), alpha = 0.2) +
