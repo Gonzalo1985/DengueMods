@@ -312,7 +312,7 @@ mg.evaluation <- mg.evaluation(input.data = tabla.FINAL,
                                predictors = var.predictors,
                                var.model = "Casos", lmodel = mg)
 
-#saveRDS(object = mg, file = "./models/multiple_lineal_model")
+#saveRDS(object = mg, file = "./models/87344_multiple_lineal_model")
 
 
 # ------------------------------------------------------------------------------
@@ -324,9 +324,9 @@ set.seed(123)
 rf.training <- predict(model.rf, tabla.training)
 
 set.seed(123)
-rf.verification <- predict(model.rf, tabla.FINAL) # tabla.verification
+rf.verification <- predict(model.rf, tabla.FINAL)
 
-#saveRDS(object = model.rf, file = "./models/random_forest_model")
+#saveRDS(object = model.rf, file = "./models/87344_random_forest_model")
 
 # ------------------------------------------------------------------------------
 # MODELO SVM
@@ -339,7 +339,7 @@ svm.training <- predict(model.svm, tabla.training)
 set.seed(123)
 svm.verification <- predict(model.svm, tabla.FINAL)
 
-#saveRDS(object = model.svm, file = "./models/svm_model")
+#saveRDS(object = model.svm, file = "./models/87344_svm_model")
 
 
 # ------------------------------------------------------------------------------
