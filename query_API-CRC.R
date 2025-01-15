@@ -1,5 +1,3 @@
-rm(list = ls())
-
 # Carga de paquetes necesarios para hacer los requests a la API y graficar resultados
 library("dplyr")
 library("glue")
@@ -32,45 +30,52 @@ ConsumirServicioJSON <- function(url, usuario, clave) {
 # ------------------------------------------------------------------------------
 
 
-# Uso de paquete Cairo para generar gráficos
-options(bitmapType = "cairo")
-
-# El parámetro ssl_verifypeer=FALSE implica que no se va a verificar la validez del certificado 
-# utilizado en la conexión SSL establecida con la API del CRC-SAS. Esto es útil cuando la máquina 
-# cliente no puede validar el certificado emitido por la CA del CRC-SAS.
-httr::set_config(httr::config(ssl_verifypeer = FALSE))
-
-# Credenciales para la API
-base.url        <- 'https://api.crc-sas.org/ws-api'
-usuario.default <- ''
-clave.default   <- ''
-
-fecha.desde           <- ConvertirFechaISO8601(as.Date("2024-08-01", tz = UTC))
-fecha.hasta           <- ConvertirFechaISO8601(as.Date("2024-08-21", tz = UTC))
-
-for (k in c("87121", "87155", "87344")){
+ConsumirDatosEstacion <- function(url.consulta = url.consulta,
+                                  usuario = usuario, clave = clave,
+                                  fecha.inicial = fecha.inicial,
+                                  fecha.final = fecha.final,
+                                  id.estacion = id.estacion){
+  # El parámetro ssl_verifypeer=FALSE implica que no se va a verificar la validez del certificado 
+  # utilizado en la conexión SSL establecida con la API del CRC-SAS. Esto es útil cuando la máquina 
+  # cliente no puede validar el certificado emitido por la CA del CRC-SAS.
+  httr::set_config(httr::config(ssl_verifypeer = FALSE))
   
-  estacion <- k
+  # Credenciales para la API
+  base.url        <- url.consulta
+  usuario.default <- usuario
+  clave.default   <- clave
   
-  url.registros.diarios <- glue::glue("{base.url}/registros_diarios/{estacion}/{fecha.desde}/{fecha.hasta}")
-  registros.largo       <- ConsumirServicioJSON(url = url.registros.diarios,
-                                                usuario = usuario.default, clave = clave.default)
+  fecha.desde           <- ConvertirFechaISO8601(as.Date(fecha.inicial, tz = UTC))
+  fecha.hasta           <- ConvertirFechaISO8601(as.Date(fecha.final, tz = UTC))
   
-  registros.ancho       <- dplyr::select(registros.largo, -num_observaciones) %>%
-    tidyr::spread(key = variable_id, value = valor)
+  id <- id.estacion
   
-  registros.ancho <- registros.ancho[which(registros.ancho$estado == "A" | registros.ancho$estado == "S"),
-                                     c("omm_id", "fecha", "tmin", "prcp", "hr")]
-  
-  tmin <- aggregate(tmin ~ fecha, data = registros.ancho, FUN = sum)
-  prcp <- aggregate(prcp ~ fecha, data = registros.ancho, FUN = sum)
-  hr <- aggregate(hr ~ fecha, data = registros.ancho, FUN = sum)
-  
-  aux.merge <- merge(tmin, prcp)
-  merge.final <- merge(aux.merge, hr)
-  
-  # Tabla de datos de todas las variables
-  print(knitr::kable(merge.final))
+  for (k in id.estacion){
+    
+    estacion <- k
+    
+    url.registros.diarios <- glue::glue("{base.url}/registros_diarios/{estacion}/{fecha.desde}/{fecha.hasta}")
+    registros.largo       <- ConsumirServicioJSON(url = url.registros.diarios,
+                                                  usuario = usuario.default, clave = clave.default)
+    
+    registros.ancho       <- dplyr::select(registros.largo, -num_observaciones) %>%
+      tidyr::spread(key = variable_id, value = valor)
+    
+    registros.ancho <- registros.ancho[which(registros.ancho$estado == "A" | registros.ancho$estado == "S"),
+                                       c("omm_id", "fecha", "tmin", "prcp", "hr")]
+    
+    tmin <- aggregate(tmin ~ fecha, data = registros.ancho, FUN = sum)
+    prcp <- aggregate(prcp ~ fecha, data = registros.ancho, FUN = sum)
+    hr <- aggregate(hr ~ fecha, data = registros.ancho, FUN = sum)
+    
+    aux.merge <- merge(tmin, prcp)
+    merge.final <- merge(aux.merge, hr)
+    
+    # Tabla de datos de todas las variables
+    print(knitr::kable(merge.final))
+    return(merge.final)
+  }
 }
+
   
 
