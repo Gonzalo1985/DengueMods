@@ -13,6 +13,18 @@ BASE.meteo <- function(path.data = path.data, meteo.file = meteo.file, id.int = 
 }
 
 
+BASE.meteo.2 <- function(path.data = path.data, bhoa.file = bhoa.file, meteo.data = meteo.data)
+{
+  file1 <- read.csv(paste0(path.data, bhoa.file), row.names = NULL)
+  file1 <- file1[,-5]
+  colnames(file1) <- c("Fecha", "ETP.mm", "ETR.mm", "ALM.mm")
+  file1$Fecha <- as.Date(file1$Fecha)
+  meteo.data$Fecha <- as.Date(meteo.data$Fecha)
+  final.data <- merge(meteo.data, file1, by = "Fecha")
+  return(final.data)
+}
+
+
 # ------------------------------------------------------------------------------
 # Funcion que optimiza los modelos de Machine Learning
 OPTI.methods <- function(data = data, formula = formula, method1 = method1, model = model)

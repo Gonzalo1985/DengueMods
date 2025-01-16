@@ -61,18 +61,21 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
     registros.ancho       <- dplyr::select(registros.largo, -num_observaciones) %>%
       tidyr::spread(key = variable_id, value = valor)
     
-    registros.ancho <- registros.ancho[which(registros.ancho$estado == "A" | registros.ancho$estado == "S"),
+    registros.ancho <- registros.ancho[which(registros.ancho$estado == "A" | registros.ancho$estado == "S" | is.na(registros.ancho$estado)),
                                        c("omm_id", "fecha", "tmin", "prcp", "hr")]
     
     tmin <- aggregate(tmin ~ fecha, data = registros.ancho, FUN = sum)
     prcp <- aggregate(prcp ~ fecha, data = registros.ancho, FUN = sum)
     hr <- aggregate(hr ~ fecha, data = registros.ancho, FUN = sum)
     
-    aux.merge <- merge(tmin, prcp)
-    merge.final <- merge(aux.merge, hr)
+    aux.merge <- merge(tmin, prcp, all = TRUE)
+    merge.final <- merge(aux.merge, hr, all = TRUE)
+    
+    colnames(merge.final)[1] <- "Fecha"
     
     # Tabla de datos de todas las variables
-    print(knitr::kable(merge.final))
+    print("Los ultimos registros de la consulta son:")
+    print(tail(merge.final))
     return(merge.final)
   }
 }

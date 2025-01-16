@@ -13,46 +13,51 @@ library("e1071")
 library("caret")
 
 path.ppal <- "./"
-source(paste0(path.ppal, "fcts_DENGUE.R"))
-source(paste0(path.ppal, "query_API-CRC.R"))
+source(paste0(path.ppal, "fcts_datatable-models.R"))
+source(paste0(path.ppal, "fcts_query-API-CRC.R"))
 
-station.number <- 87344
+station.number <- 87155
+
 Prcp.1m.Tucu <- c(0.0, 3.1, 3.1, 7.8, 7.8, 4.8, 4.7, 1.7, 11.0, 11.0, 101, 107,
                   99.0, 125, 109.1, 67.9, 69.2, 125.20, 87.90, 118.70, 114.60, 64.40, 50.60, 72.0)
 Prcp.1m.Resi <- c(9.0, 58.0, 58.0, 126, 118, 116, 71.0, 71.0, 43.0, 47.0, 74.2,
                   97.4, 78.4, 74.5, 154.5, 146.6, 243.6, 345.60, 266.40, 382.70, 277.70, 234.70, 155.80, 69.0)
 #Prcp.1m.Cord <- c()
 
+# ------------------------------------------------------------------------------
+# Armado de tabla de datos operativa de meteo y bhoa
+meteo.request <- ConsumirDatosEstacion(url.consulta = 'https://api.crc-sas.org/ws-api',
+                                       usuario = 'gdiaz', clave = 'EoNGmeDYdr',
+                                       fecha.inicial = '2019-01-01',
+                                       fecha.final = '2025-01-11',
+                                       id.estacion = station.number)
+
 if (station.number == 87121)
-  {filename.meteo <- "87121 - Tucuman - meteo.csv"
+  {
    filename.bhoa  <- "87121 - Tucuman - bhoa.csv"
+   data <- BASE.meteo.2(path.data = path.ppal,
+                        bhoa.file = paste0("operativo/", filename.bhoa),
+                        meteo.data = meteo.request)
    LOC.INDEC.number <- "90084010"
    PRCP.1m.station <- Prcp.1m.Tucu}
 
 if (station.number == 87155)
-  {filename.meteo <- "87155 - Resistencia - meteo.csv"
-   filename.bhoa  <- "87155 - Resistencia - bhoa.csv"
+  {filename.bhoa  <- "87155 - Resistencia - bhoa.csv"
+   data <- BASE.meteo.2(path.data = path.ppal,
+                        bhoa.file = paste0("operativo/", filename.bhoa),
+                        meteo.data = meteo.request)
    LOC.INDEC.number <- "22140060"
    PRCP.1m.station <- Prcp.1m.Resi}
 
 if (station.number == 87344)
-  {filename.meteo <- ConsumirDatosEstacion(url.consulta = 'https://api.crc-sas.org/ws-api',
-                                           usuario = 'gdiaz', clave = 'EoNGmeDYdr',
-                                           fecha.inicial = '2019-01-01', fecha.final = '2025-01-11',
-                                           id.estacion = station.number)
-   colnames(filename.meteo)[1] <- "Fecha"
-   filename.bhoa  <- read.csv("./operativo/87344 - CordobaAero - bhoa.csv", row.names = NULL)
+  {filename.bhoa  <- "87344 - CordobaAero - bhoa.csv"
+   data <- BASE.meteo.2(path.data = path.ppal,
+                        bhoa.file = paste0("operativo/", filename.bhoa),
+                        meteo.data = meteo.request)
    LOC.INDEC.number <- "14014010"
    PRCP.1m.station <- Prcp.1m.Cord}
 
-
-# levanta datos meteo y bhoa operativos
-data <- BASE.meteo(path.data = path.ppal,
-                   meteo.file = paste0("operativo/", filename.meteo),
-                   id.int = station.number,
-                   bhoa.file = paste0("operativo/", filename.bhoa))
-
-colnames(data) <- c('Fecha', 'Estacion', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
+colnames(data) <- c('Fecha', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 
 data <- data %>% mutate(Tmin.count = rollapply(Tmin, width = 7, FUN = function(x) sum(x < 10), align = "right", fill = NA))
 
