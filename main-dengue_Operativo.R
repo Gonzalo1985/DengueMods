@@ -16,13 +16,14 @@ path.ppal <- "./"
 source(paste0(path.ppal, "fcts_datatable-models.R"))
 source(paste0(path.ppal, "fcts_query-API-CRC.R"))
 
-station.number <- 87155
+station.number <- 87344
 
 Prcp.1m.Tucu <- c(0.0, 3.1, 3.1, 7.8, 7.8, 4.8, 4.7, 1.7, 11.0, 11.0, 101, 107,
                   99.0, 125, 109.1, 67.9, 69.2, 125.20, 87.90, 118.70, 114.60, 64.40, 50.60, 72.0)
 Prcp.1m.Resi <- c(9.0, 58.0, 58.0, 126, 118, 116, 71.0, 71.0, 43.0, 47.0, 74.2,
                   97.4, 78.4, 74.5, 154.5, 146.6, 243.6, 345.60, 266.40, 382.70, 277.70, 234.70, 155.80, 69.0)
-#Prcp.1m.Cord <- c()
+Prcp.1m.Cord <- c(5.9, 5.9, 5.9, 4.0, 4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 34.0,
+                  56.0, 125.0, 148.0, 123.0, 112.0, 71.4, 191.90, 173.90, 170.60, 185.20, 117.70, 89.70, 98.10)
 
 # ------------------------------------------------------------------------------
 # Armado de tabla de datos operativa de meteo y bhoa
@@ -59,7 +60,7 @@ if (station.number == 87344)
 
 colnames(data) <- c('Fecha', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 
-data <- data %>% mutate(Tmin.count = rollapply(Tmin, width = 7, FUN = function(x) sum(x < 10), align = "right", fill = NA))
+data <- data %>% mutate(Tmin.count = rollapply(Tmin, width = 7, FUN = function(x) sum(x < 18), align = "right", fill = NA))
 
 data.operativo <- data[which(data$Fecha >= "2024-07-28" & data$Fecha <= "2025-01-11"),]
 data.operativo$Semana <- sort(c(rep(31, 7), rep(32, 7), rep(33, 7),
@@ -124,9 +125,9 @@ tmin.station.count.semanal <- data.operativo %>%
   group_by(Semana) %>%
   summarise(Media = mean(Tmin.count, na.rm = TRUE))
 
-
 tabla <- data.frame(Dates = seq.Date(as.Date("2024-07-28"), as.Date("2025-01-11"), 7),
                     Semana = cases.station$ANIO_SEPI_MIN,
+                    Casos.lag = c(NA, NA, cases.station$Autóctono[1:(nrow(cases.station)-2)]),
                     Casos.anterior = cases.last.wave$Casos,
                     Prcp.lag2 = prcp.station.semanal$Suma,
                     Prcp.1m.lag2 = PRCP.1m.station,
@@ -138,6 +139,10 @@ tabla <- data.frame(Dates = seq.Date(as.Date("2024-07-28"), as.Date("2025-01-11"
                     Tmin.Count.lag2 = tmin.station.count.semanal$Media
                     )
 
+tabla <- tabla %>% mutate(Prcp.2s.lag2 = rollapply(Prcp.lag2, width = 2, FUN = sum, align = "right", fill = NA))
+tabla <- tabla[-c(1,2),]
+
+
 # CARGA DE MODELOS ENTRENADOS / VERIFICADOS
 mg.model <- readRDS(paste0("./models/", station.number, "_multiple_lineal_model"))
 rf.model <- readRDS(paste0("./models/", station.number, "_random_forest_model"))
@@ -146,7 +151,7 @@ svm.model <- readRDS(paste0("./models/", station.number, "_svm_model"))
 
 
 # ARMADO DE LA TABLA DE DATOS A GRAFICAR
-data.complete <- as_tibble(c("24/33", "24/34", "24/35", "24/36", "24/37", "24/38",
+data.complete <- as_tibble(c("24/35", "24/36", "24/37", "24/38",
                              "24/39", "24/40", "24/41", "24/42", "24/43", "24/44",
                              "24/45", "24/46", "24/47", "24/48", "24/49", "24/50",
                              "24/51", "24/52", "25/01", "25/02", "25/03", "25/04"))
@@ -178,6 +183,7 @@ fig <- ggplot() +
   
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16)) +
   theme(legend.text = element_text(lineheight = 13)) + 
+  scale_y_continuous(limits = c(0, 1000)) +
   
   labs(x = "Semana", y = "Casos", fill = "Modelos")
 
