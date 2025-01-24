@@ -16,7 +16,7 @@ path.ppal <- "./"
 source(paste0(path.ppal, "fcts_datatable-models.R"))
 source(paste0(path.ppal, "fcts_query-API-CRC.R"))
 
-station.number <- 87344
+station.number <- 87121
 
 Prcp.1m.Tucu <- c(0.0, 3.1, 3.1, 7.8, 7.8, 4.8, 4.7, 1.7, 11.0, 11.0, 101, 107,
                   99.0, 125, 109.1, 67.9, 69.2, 125.20, 87.90, 118.70, 114.60, 64.40, 50.60, 72.0)
@@ -183,7 +183,7 @@ fig <- ggplot() +
   
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16)) +
   theme(legend.text = element_text(lineheight = 13)) + 
-  scale_y_continuous(limits = c(0, 1000)) +
+  scale_y_continuous(limits = c(0, 300)) +
   
   labs(x = "Semana", y = "Casos", fill = "Modelos")
 
