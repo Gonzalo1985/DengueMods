@@ -11,6 +11,7 @@ library("lubridate")
 library("randomForest")
 library("e1071")
 library("caret")
+library("config")
 
 path.ppal <- "./"
 source(paste0(path.ppal, "fcts_datatable-models.R"))
@@ -27,8 +28,10 @@ Prcp.1m.Cord <- c(5.9, 5.9, 5.9, 4.0, 4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 34.0,
 
 # ------------------------------------------------------------------------------
 # Armado de tabla de datos operativa de meteo y bhoa
+cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
+
 meteo.request <- ConsumirDatosEstacion(url.consulta = 'https://api.crc-sas.org/ws-api',
-                                       usuario = 'gdiaz', clave = 'EoNGmeDYdr',
+                                       usuario = cfg[1], clave = cfg[2],
                                        fecha.inicial = '2019-01-01',
                                        fecha.final = '2025-02-08',
                                        id.estacion = station.number)

@@ -2,8 +2,7 @@
 DengueMods.Rproj
 .Rhistory
 ESTACIONES_SMN.csv
-fcts_datatable-models.R
-fcts_query-API-CRC.R
+Credentials_CRC.yml
 
 
 # Folders
