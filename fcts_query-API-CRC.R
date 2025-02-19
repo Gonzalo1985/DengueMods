@@ -50,10 +50,10 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
   
   id <- id.estacion
   
-  for (k in id.estacion){
+  for (k in 1:length(id)){
     
-    estacion <- k
-    
+    estacion <- id[k]
+    print(k)
     url.registros.diarios <- glue::glue("{base.url}/registros_diarios/{estacion}/{fecha.desde}/{fecha.hasta}")
     registros.largo       <- ConsumirServicioJSON(url = url.registros.diarios,
                                                   usuario = usuario.default, clave = clave.default)
@@ -73,11 +73,13 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
     
     colnames(merge.final)[1] <- "Fecha"
     
+    if (k == 1) {salida <- merge.final} else {salida <- rbind(salida, merge.final)}
+    
     # Tabla de datos de todas las variables
     print("Los ultimos registros de la consulta son:")
-    print(tail(merge.final))
-    return(merge.final)
+    print(registros.ancho)
   }
+ return(salida)
 }
 
   
