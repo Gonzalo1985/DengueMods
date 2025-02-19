@@ -1,5 +1,6 @@
 rm(list = ls())
 
+library("config")
 library("readxl")
 library("vroom")
 library("dplyr")
@@ -11,7 +12,6 @@ library("lubridate")
 library("randomForest")
 library("e1071")
 library("caret")
-library("config")
 
 path.ppal <- "./"
 source(paste0(path.ppal, "fcts_datatable-models.R"))

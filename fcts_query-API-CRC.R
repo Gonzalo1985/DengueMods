@@ -48,12 +48,10 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
   fecha.desde           <- ConvertirFechaISO8601(as.Date(fecha.inicial, tz = UTC))
   fecha.hasta           <- ConvertirFechaISO8601(as.Date(fecha.final, tz = UTC))
   
-  id <- id.estacion
-  
-  for (k in 1:length(id)){
+  for (k in 1:length(id.estacion)){
     
-    estacion <- id[k]
-    print(k)
+    estacion <- id.estacion[k]
+    print(estacion)
     url.registros.diarios <- glue::glue("{base.url}/registros_diarios/{estacion}/{fecha.desde}/{fecha.hasta}")
     registros.largo       <- ConsumirServicioJSON(url = url.registros.diarios,
                                                   usuario = usuario.default, clave = clave.default)
@@ -68,8 +66,8 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
     prcp <- aggregate(prcp ~ fecha, data = registros.ancho, FUN = sum)
     hr <- aggregate(hr ~ fecha, data = registros.ancho, FUN = sum)
     
-    aux.merge <- merge(tmin, prcp, all = TRUE)
-    merge.final <- merge(aux.merge, hr, all = TRUE)
+    aux.merge <- base::merge(tmin, prcp, all = TRUE)
+    merge.final <- base::merge(aux.merge, hr, all = TRUE)
     
     colnames(merge.final)[1] <- "Fecha"
     
@@ -77,7 +75,7 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
     
     # Tabla de datos de todas las variables
     print("Los ultimos registros de la consulta son:")
-    print(registros.ancho)
+    print(tail(merge.final))
   }
  return(salida)
 }
