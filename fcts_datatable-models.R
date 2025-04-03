@@ -8,7 +8,7 @@ BASE.meteo <- function(path.data = path.data, meteo.file = meteo.file, id.int = 
   file2 <- file2[,-5]
   colnames(file2) <- c("Fecha", "ETP.mm", "ETR.mm", "ALM.mm")
   file2$Fecha <- as.Date(file2$Fecha)
-  file <- merge(file1, file2, by = "Fecha")
+  file <- base::merge(file1, file2, by = "Fecha")
   return(file)
 }
 
@@ -20,7 +20,7 @@ BASE.meteo.2 <- function(path.data = path.data, bhoa.file = bhoa.file, meteo.dat
   colnames(file1) <- c("Fecha", "ETP.mm", "ETR.mm", "ALM.mm")
   file1$Fecha <- as.Date(file1$Fecha)
   meteo.data$Fecha <- as.Date(meteo.data$Fecha)
-  final.data <- merge(meteo.data, file1, by = "Fecha")
+  final.data <- base::merge(meteo.data, file1, by = "Fecha")
   return(final.data)
 }
 

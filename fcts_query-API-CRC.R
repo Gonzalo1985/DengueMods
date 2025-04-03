@@ -55,23 +55,40 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
     url.registros.diarios <- glue::glue("{base.url}/registros_diarios/{estacion}/{fecha.desde}/{fecha.hasta}")
     registros.largo       <- ConsumirServicioJSON(url = url.registros.diarios,
                                                   usuario = usuario.default, clave = clave.default)
-    
+
     registros.ancho       <- dplyr::select(registros.largo, -num_observaciones) %>%
       tidyr::spread(key = variable_id, value = valor)
     
-    registros.ancho <- registros.ancho[which(registros.ancho$estado == "A" | registros.ancho$estado == "S" | is.na(registros.ancho$estado)),
-                                       c("omm_id", "fecha", "tmin", "prcp", "hr")]
+  
+    #registros.ancho <- registros.ancho[which(registros.ancho$estado == "A" | registros.ancho$estado == "S" | is.na(registros.ancho$estado)),
+    #                                   c("omm_id", "fecha", "tmin", "prcp", "hr")]
     
-    tmin <- aggregate(tmin ~ fecha, data = registros.ancho, FUN = sum)
-    prcp <- aggregate(prcp ~ fecha, data = registros.ancho, FUN = sum)
-    hr <- aggregate(hr ~ fecha, data = registros.ancho, FUN = sum)
+    
+    if (all(is.na(registros.ancho$tmin)))
+      {tmin <- data.frame(fecha = registros.ancho$fecha, tmin = NA)} else
+        {tmin <- aggregate(tmin ~ fecha, data = registros.ancho, FUN = sum)}
+    
+    
+    if (all(is.na(registros.ancho$tmax)))
+      {tmax <- data.frame(fecha = registros.ancho$fecha, tmax = NA)} else
+        {tmax <- aggregate(tmax ~ fecha, data = registros.ancho, FUN = sum)}
+    
+    if (all(is.na(registros.ancho$prcp)))
+      {prcp <- data.frame(fecha = registros.ancho$fecha, prcp = NA)} else
+        {prcp <- aggregate(prcp ~ fecha, data = registros.ancho, FUN = sum)}
+    
+    #hr <- aggregate(hr ~ fecha, data = registros.ancho, FUN = sum)
     
     aux.merge <- base::merge(tmin, prcp, all = TRUE)
-    merge.final <- base::merge(aux.merge, hr, all = TRUE)
+    #merge.final <- base::merge(aux.merge, hr, all = TRUE)
+    merge.final <- base::merge(aux.merge, tmax, all = TRUE)
     
     colnames(merge.final)[1] <- "Fecha"
     
-    if (k == 1) {salida <- merge.final} else {salida <- rbind(salida, merge.final)}
+    if (k == 1)
+      {salida <- data.frame(nro.estacion = estacion, merge.final)} else
+        {salida <- rbind(salida,
+                         data.frame(nro.estacion = estacion, merge.final))}
     
     # Tabla de datos de todas las variables
     print("Los ultimos registros de la consulta son:")
@@ -79,6 +96,3 @@ ConsumirDatosEstacion <- function(url.consulta = url.consulta,
   }
  return(salida)
 }
-
-  
-

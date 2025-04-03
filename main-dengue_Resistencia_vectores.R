@@ -18,8 +18,9 @@ source("./fcts_query-API-CRC.R")
 
 # ------------------------------------------------------------------------------
 # PREPARACION DE BASE METEOROLOGICA
-meteo.request <- ConsumirDatosEstacion(url.consulta = 'https://api.crc-sas.org/ws-api',
-                                       usuario = 'gdiaz', clave = 'EoNGmeDYdr',
+cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
+meteo.request <- ConsumirDatosEstacion(url.consulta = cfg[1],
+                                       usuario = cfg[2], clave = cfg[3],
                                        fecha.inicial = '2019-01-01',
                                        fecha.final = '2025-01-11',
                                        id.estacion = 87155)
