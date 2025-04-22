@@ -33,7 +33,7 @@ data <- BASE.meteo.2(path.data = path.ppal,
 colnames(data) <- c('Fecha', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 
 # 7 dias consecutivos por debajo de un umbral
-data <- data %>% mutate(Tmin.count = as.integer(rollapply(Tmin, width = 7, FUN = function(x) all(x < 18), align = "right", fill = NA)))
+data <- data %>% mutate(Tmin.count.7d = as.integer(rollapply(Tmin, width = 7, FUN = function(x) all(x < 18), align = "right", fill = NA)))
 
 data.training <- data[which(data$Fecha >= "2023-11-05" & data$Fecha <= "2024-11-16"),]
 # ------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ etp.station.semanal <- data.training %>%
 
 tmin.station.count.semanal <- data.training %>% 
   group_by(Semana) %>%
-  summarise(Media = sum(Tmin.count))
+  summarise(Media = sum(Tmin.count.7d))
 
 tabla.training <- data.frame(Dates = as.POSIXct(seq.Date(as.Date("2023-01-01"), as.Date("2023-02-23"), 1)),
                              Semana = cases.training$ANIO_SEPI_MIN,
@@ -98,21 +98,21 @@ tabla.training <- data.frame(Dates = as.POSIXct(seq.Date(as.Date("2023-01-01"), 
                              Casos.lag = c(NA, NA, cases.training$TOTAL[1:52]),
                              Prcp = prcp.station.semanal$Suma,
                              Tmin = tmin.station.semanal$Media,
-                             Tmin.Count = tmin.station.count.semanal$Media,
+                             Tmin.Count.7d = tmin.station.count.semanal$Media,
                              HR2 = HR2.station.semanal$Media,
                              Almc = almc.station.semanal$Media,
                              ETR = etr.station.semanal$Media,
                              ETP = etp.station.semanal$Media,
                              Prcp.lag1 = c(NA, prcp.station.semanal$Suma[1:53]),
                              Tmin.lag1 = c(NA, tmin.station.semanal$Media[1:53]),
-                             Tmin.Count.lag1 = c(NA, tmin.station.count.semanal$Media[1:53]),
+                             Tmin.Count.7d.lag1 = c(NA, tmin.station.count.semanal$Media[1:53]),
                              HR2.lag1 = c(NA, HR2.station.semanal$Media[1:53]),
                              Almc.lag1 = c(NA, almc.station.semanal$Media[1:53]),
                              ETR.lag1 = c(NA, etr.station.semanal$Media[1:53]),
                              ETP.lag1 = c(NA, etp.station.semanal$Media[1:53]),
                              Prcp.lag2 = c(NA, NA, prcp.station.semanal$Suma[1:52]),
                              Tmin.lag2 = c(NA, NA, tmin.station.semanal$Media[1:52]),
-                             Tmin.Count.lag2 = c(NA, NA, tmin.station.count.semanal$Media[1:52]),
+                             Tmin.Count.7d.lag2 = c(NA, NA, tmin.station.count.semanal$Media[1:52]),
                              HR2.lag2 = c(NA, NA, HR2.station.semanal$Media[1:52]),
                              Almc.lag2 = c(NA, NA, almc.station.semanal$Media[1:52]),
                              ETR.lag2 = c(NA, NA, etr.station.semanal$Media[1:52]),

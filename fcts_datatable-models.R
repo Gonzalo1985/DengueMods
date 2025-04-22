@@ -35,11 +35,21 @@ OPTI.methods <- function(data = data, formula = formula, method1 = method1, mode
     mtry = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
   )
   
+  #tune_grid <-  expand.grid(interaction.depth = c(1, 5, 9))
+  
   myTimeControl <- trainControl(method = method1,
                                 number = 100,
                                 #initialWindow = 30,
                                 verboseIter = TRUE,
                                 savePredictions = "all")
+  
+  #model <- train(formula,
+  #               data = data,
+  #               method = model,
+  #               trControl = myTimeControl,
+  #               tunegrid = tune_grid,
+  #               metric = 'RMSE',
+  #               importance = TRUE)
   
   model <- train(formula,
                  data = data,
