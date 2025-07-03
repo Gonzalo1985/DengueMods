@@ -25,10 +25,14 @@ data <- BASE.meteo(path.data = path.ppal,
 colnames(data) <- c('Fecha', 'Estacion', 'Tmin', 'Prcp', 'HR2', 'ETP', 'ETR', 'ALM')
 
 # 4 dias consecutivos por debajo de un umbral
-data <- data %>% mutate(Tmin.count.4d = as.integer(rollapply(Tmin, width = 4, FUN = function(x) all(x < 18), align = "right", fill = NA)))
+data <- data %>% mutate(Tmin.count.4d = as.integer(rollapply(Tmin, width = 4,
+                                                             FUN = function(x) all(x < 18),
+                                                             align = "right", fill = NA)))
 
 # 7 dias consecutivos por debajo de un umbral
-data <- data %>% mutate(Tmin.count.7d = as.integer(rollapply(Tmin, width = 7, FUN = function(x) all(x < 18), align = "right", fill = NA)))
+data <- data %>% mutate(Tmin.count.7d = as.integer(rollapply(Tmin, width = 7,
+                                                             FUN = function(x) all(x < 18),
+                                                             align = "right", fill = NA)))
 
 data.training.2022.2023 <- data[which(data$Fecha >= "2022-07-31" & data$Fecha <= "2023-07-29"),]
 data.training.2023.2024 <- data[which(data$Fecha >= "2023-07-30" & data$Fecha <= "2024-07-27"),]
@@ -176,11 +180,14 @@ colnames(tabla.training)[34] <- c("Prcp.2s.lag2")
 tabla.FINAL <- tabla.training
 
 # CORRIDA DE MODELOS
-var.predictors <- c("Almc.lag2", "Tmin.Count.4d.lag2", "Tmin.Count.7d.lag2", "Prcp.1m.lag2", "Casos.lag")
+var.predictors <- c("Almc.lag2", "Tmin.Count.4d.lag2",
+                    "Tmin.Count.7d.lag2", "Prcp.1m.lag2", "Casos.lag")
 
-var.predictors.rf <- c("Almc.lag2", "Tmin.Count.4d.lag2", "Tmin.Count.7d.lag2","Prcp.2s.lag2", "Casos.lag")
+var.predictors.rf <- c("Almc.lag2", "Tmin.Count.4d.lag2",
+                       "Tmin.Count.7d.lag2","Prcp.2s.lag2", "Casos.lag")
 
-var.predictors.svm <- c("Almc.lag2", "Tmin.Count.4d.lag2", "Tmin.Count.7d.lag2", "Prcp.1m.lag2", "Casos.lag")
+var.predictors.svm <- c("Almc.lag2", "Tmin.Count.4d.lag2",
+                        "Tmin.Count.7d.lag2", "Prcp.1m.lag2", "Casos.lag")
 
 form.string.rf <- as.formula(paste("Casos ~ ", paste(var.predictors.rf, collapse= "+")))
 form.string.svm <- as.formula(paste("Casos ~ ", paste(var.predictors.svm, collapse= "+")))
@@ -195,7 +202,7 @@ mg.evaluation <- mg.evaluation(input.data = tabla.FINAL,
                                predictors = var.predictors,
                                var.model = "Casos", lmodel = mg)
 
-saveRDS(object = mg, file = "./models/87344_multiple_lineal_model_7d+4d")
+#saveRDS(object = mg, file = "./models/87344_multiple_lineal_model_7d+4d")
 
 
 # ------------------------------------------------------------------------------
@@ -209,7 +216,7 @@ rf.training <- predict(model.rf, tabla.training)
 set.seed(123)
 rf.verification <- predict(model.rf, tabla.FINAL)
 
-saveRDS(object = model.rf, file = "./models/87344_random_forest_model_7d+4d")
+#saveRDS(object = model.rf, file = "./models/87344_random_forest_model_7d+4d")
 
 # ------------------------------------------------------------------------------
 # MODELO SVM
@@ -222,7 +229,7 @@ svm.training <- predict(model.svm, tabla.training)
 set.seed(123)
 svm.verification <- predict(model.svm, tabla.FINAL)
 
-saveRDS(object = model.svm, file = "./models/87344_svm_model_7d+4d")
+#saveRDS(object = model.svm, file = "./models/87344_svm_model_7d+4d")
 
 
 # ------------------------------------------------------------------------------

@@ -3,6 +3,8 @@ DengueMods.Rproj
 .Rhistory
 ESTACIONES_SMN.csv
 Credentials_CRC.yml
+tidymodels/Cordoba_training.csv
+tidymodels/Cordoba_verification.csv
 
 
 # Folders
@@ -13,3 +15,4 @@ meteo/
 vectores/
 models/
 operativo/
+tidymodels/bhoa/
