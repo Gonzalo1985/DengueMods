@@ -15,8 +15,8 @@ cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
 
 meteo.request <- ConsumirDatosEstacion(url.consulta = cfg[1],
                                        usuario = cfg[2], clave = cfg[3],
-                                       fecha.inicial = '2025-06-01',
-                                       fecha.final = '2025-06-28',
+                                       fecha.inicial = '2025-06-22',
+                                       fecha.final = '2025-07-19',
                                        id.estacion = metadata$V3)
 
 #meteo.request <- ConsumirDatosEstacion(url.consulta = cfg[1],
@@ -41,7 +41,7 @@ tmin.semanal <- meteo.request %>%
   summarise(tmin = mean(tmin))
 
 
-Semana <- rep(c("23/25", "24/25", "25/25", "26/25"), 105)
+Semana <- rep(c("26/25", "27/25", "28/25", "29/25"), 105)
 
 #aux.1 <- c(seq(36,52,1), "01", "02", "03", "04", "05", "06", "07", "08", "09", seq(10,18,1))
 #aux.2 <- c(rep(24,17), rep(25,18))

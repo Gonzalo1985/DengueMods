@@ -4,7 +4,7 @@ library("corrplot")
 
 
 
-training <- read.csv("./tidymodels/Cordoba_training.csv")
+training <- read.csv("./tidymodels/Cordoba_training_Casos-lag-4semanas.csv")
 verification <- read.csv("./tidymodels/Cordoba_verification.csv")
 
 # solo se queda con los lag2
@@ -14,17 +14,17 @@ training <- training[, -c(12,13,15,16)]
 
 # Exploring data
 training.longer <- training %>%
-  select(Dates, Casos, 4:14) %>%
-  pivot_longer(3:13, names_to = "variables")
+  select(Semana, Casos, 3:13) %>%
+  pivot_longer(4:13, names_to = "variables")
 
 training.longer %>%
   ggplot(aes(value, Casos, color = variables)) +
   geom_point() +
-  #scale_x_log10() +
+  scale_x_log10() +
   scale_y_log10() +
   facet_wrap(~ variables, scales = "free_x")
 
-corrplot(cor(training[,3:14]), 
+corrplot(cor(training[,3:13]), 
          method = "circle",     # Círculos
          type = "full",         # Mostrar matriz completa
          addCoef.col = "black", # Agregar valores en negro
@@ -49,12 +49,11 @@ dengue.folds <- vfold_cv(training.data, v = 40, strata = Casos)
 # Building model ----
 data.recipe <- 
   recipe(formula = Casos.log ~
-           Dates + Semana + Casos +
-           Casos.lag +
+           Semana + Casos +
            Tmin.Count.4d.lag2 + 
            Tmin.Count.7d.lag2 +
            Almc.lag2, data = training.data) %>%
-  update_role(Dates, Semana, Casos, new_role = "ID")
+  update_role(Semana, Casos, new_role = "ID")
 
 rf.mod <- 
   rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>% 
@@ -94,14 +93,18 @@ glmn.fit <- fit_best(glmn.tuning, verbose = TRUE)
 #testing.pred <- predict(rf.fit, testing.data)
 
 ## Explore results
-show_best(ranger_tune, metric = "rmse")
-autoplot(ranger_tune)
+show_best(rf.tuning, metric = "rmse")
+autoplot(rf.tuning)
 
 rf.fit.final <- rf.workflow %>%
-  finalize_workflow(select_best(ranger_tune))
+  finalize_workflow(select_best(rf.tuning))
+
+glmn.fit.final <- glmn.workflow %>%
+  finalize_workflow(select_best(glmn.tuning))
 
 # ¿Qué resuelve last_fit con respecto al testing?
-dengue.fit <- last_fit(rf.fit.final, data.split)
+rf.fit <- last_fit(rf.fit.final, data.split)
+glmn.fit <- last_fit(glmn.fit.final, data.split)
 
 collect_predictions(dengue.fit) %>%
   ggplot(aes(Casos.log, .pred)) +
@@ -109,13 +112,18 @@ collect_predictions(dengue.fit) %>%
   geom_point(alpha = 0.5, color = "midnightblue") +
   coord_fixed()
 
-# fig <- ggplot() +
-#   geom_line(data = out, aes(x = SE, y = Obs, group = 1), colour="#431901", size = 1.3) +
-#   geom_point(data = out, aes(x = SE, y = Obs, group = 1), colour="#431901") +
-#   geom_line(data = out, aes(x = SE, y = .pred, group = 2), colour="#42FE01", size = 1) +
-#   geom_point(data = out, aes(x = SE, y = .pred, group = 2), colour="#42FE01") +
-#   geom_line(data = out, aes(x = SE, y = .pred.1, group = 3), colour="#42FEF1", size = 1) 
-#   geom_point(data = out, aes(x = SE, y = .pred.1, group = 3), colour="#42FEF1") +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16))
+ fig <- ggplot() +
+   geom_line(data = out, aes(x = SE, y = Obs, group = 1, colour = "Casos"), size = 0.8, linetype = "dashed") +
+   geom_point(data = out, aes(x = SE, y = Obs, group = 1, colour = "Casos")) +
+   geom_line(data = out, aes(x = SE, y = .pred, group = 2, colour = "Random Forest"), size = 1) +
+   geom_point(data = out, aes(x = SE, y = .pred, group = 2, colour = "Random Forest")) +
+   geom_line(data = out, aes(x = SE, y = .pred.1, group = 3, colour = "GLMN"), size = 1) +
+   geom_point(data = out, aes(x = SE, y = .pred.1, group = 3, colour = "GLMN")) +
+   labs(y = "Casos Dengue") +
+   theme_bw() +
+   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 14)) +
+   scale_colour_manual(values = c("Casos" = "#431901", 
+                                  "Random Forest" = "#3b7861", 
+                                  "GLMN" = "#5564eb"))
 
 
