@@ -4,7 +4,7 @@ library("corrplot")
 
 
 
-training <- read.csv("./tidymodels/Cordoba_training_Casos-lag-4semanas.csv")
+training <- read.csv("./tidymodels/Cordoba_training_Casos-lag-2semanas.csv")
 verification <- read.csv("./tidymodels/Cordoba_verification.csv")
 
 # solo se queda con los lag2
@@ -49,11 +49,11 @@ dengue.folds <- vfold_cv(training.data, v = 40, strata = Casos)
 # Building model ----
 data.recipe <- 
   recipe(formula = Casos.log ~
-           Semana + Casos +
+           Semana + Casos.lag +
            Tmin.Count.4d.lag2 + 
            Tmin.Count.7d.lag2 +
            Almc.lag2, data = training.data) %>%
-  update_role(Semana, Casos, new_role = "ID")
+  update_role(Semana, new_role = "ID")
 
 rf.mod <- 
   rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>% 
