@@ -15,22 +15,26 @@ training <- training[, -c(12,13,15,16)]
 # Exploring data
 training.longer <- training %>%
   select(Semana, Casos, 3:13) %>%
-  pivot_longer(4:13, names_to = "variables")
+  pivot_longer(3:13, names_to = "variables")
 
 training.longer %>%
   ggplot(aes(value, Casos, color = variables)) +
   geom_point() +
-  scale_x_log10() +
+  #scale_x_log10() +
   scale_y_log10() +
   facet_wrap(~ variables, scales = "free_x")
 
-corrplot(cor(training[,3:13]), 
-         method = "circle",     # Círculos
-         type = "full",         # Mostrar matriz completa
-         addCoef.col = "black", # Agregar valores en negro
-         number.cex = 0.7,      # Tamaño del texto de coeficientes
-         tl.col = "black",      # Color de etiquetas
-         tl.cex = 0.8)          # Tamaño del texto de etiquetas
+colores_suaves <- colorRampPalette(c("#FF9999", "#FFFFFF", "#9999FF"))
+
+corrplot(cor(training[,2:13]), 
+         method = "circle",        # Círculos
+         type = "full",            # Mostrar matriz completa
+         addCoef.col = "black",    # Agregar valores en negro
+         number.cex = 0.7,         # Tamaño del texto de coeficientes
+         tl.col = "black",         # Color de etiquetas
+         tl.cex = 0.8,             # Tamaño del texto de etiquetas
+         col = colores_suaves(200) # Aplicar paleta de colores suave
+        )          
 # ------------------------------------------------------------------------------
 
 # Data spliting
@@ -64,6 +68,11 @@ glmn.mod <-
   linear_reg(penalty = tune(), mixture = tune()) %>% 
   set_engine("glmnet")
 
+svm.mod <- 
+  svm_rbf(cost = tune(), rbf_sigma = tune()) %>%
+  set_mode("regression") %>%
+  set_engine("kernlab")
+
 rf.workflow <- 
   workflow() %>% 
   add_recipe(data.recipe) %>% 
@@ -73,6 +82,11 @@ glmn.workflow <-
   workflow() %>% 
   add_recipe(data.recipe) %>% 
   add_model(glmn.mod)
+
+svm.workflow <- 
+  workflow() %>% 
+  add_recipe(data.recipe) %>% 
+  add_model(svm.mod)
 # ------------------------------------------------------------------------------
 
 set.seed(123)
@@ -86,8 +100,14 @@ glmn.tuning <-
             resamples = dengue.folds,
             grid = 50, control = control_grid(save_workflow = TRUE))
 
+svm.tuning <-
+  tune_grid(svm.workflow,
+            resamples = dengue.folds,
+            grid = 50, control = control_grid(save_workflow = TRUE))
+
 rf.fit <- fit_best(rf.tuning, verbose = TRUE)
 glmn.fit <- fit_best(glmn.tuning, verbose = TRUE)
+svm.fit <- fit_best(svm.tuning, verbose = TRUE)
 
 #training.pred <- predict(rf.fit, training.data)
 #testing.pred <- predict(rf.fit, testing.data)
@@ -113,17 +133,21 @@ collect_predictions(dengue.fit) %>%
   coord_fixed()
 
  fig <- ggplot() +
-   geom_line(data = out, aes(x = SE, y = Obs, group = 1, colour = "Casos"), size = 0.8, linetype = "dashed") +
-   geom_point(data = out, aes(x = SE, y = Obs, group = 1, colour = "Casos")) +
+   geom_line(data = out, aes(x = SE, y = Obs.Autoc, group = 1, colour = "Casos"), size = 0.8, linetype = "dashed") +
+   geom_point(data = out, aes(x = SE, y = Obs.Autoc, group = 1, colour = "Casos")) +
    geom_line(data = out, aes(x = SE, y = .pred, group = 2, colour = "Random Forest"), size = 1) +
    geom_point(data = out, aes(x = SE, y = .pred, group = 2, colour = "Random Forest")) +
    geom_line(data = out, aes(x = SE, y = .pred.1, group = 3, colour = "GLMN"), size = 1) +
    geom_point(data = out, aes(x = SE, y = .pred.1, group = 3, colour = "GLMN")) +
+   geom_line(data = out, aes(x = SE, y = .pred.2, group = 3, colour = "SVM"), size = 1) +
+   geom_point(data = out, aes(x = SE, y = .pred.2, group = 3, colour = "SVM")) +
    labs(y = "Casos Dengue") +
    theme_bw() +
    theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 14)) +
+   coord_cartesian(ylim = c(0, 250)) +
    scale_colour_manual(values = c("Casos" = "#431901", 
                                   "Random Forest" = "#3b7861", 
-                                  "GLMN" = "#5564eb"))
+                                  "GLMN" = "#5564eb",
+                                  "SVM" = "#B87E14"))
 
 
