@@ -8,6 +8,8 @@ tidymodels/Cordoba_verification.csv
 tidymodels/Cordoba_training_Casos-lag-4semanas.csv
 tidymodels/Cordoba_training_Casos-lag-2semanas.csv
 tidymodels/Cordoba_verification_Casos-lag-2semanas.csv
+kmeans/ETP-ETR-ALM.csv
+kmeans/METADATA_Kmeans.csv
 
 
 # Folders
