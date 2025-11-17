@@ -91,7 +91,7 @@ colnames(data.final) <- c("SE", NroInt)
 # Ejecuta kmeans
 salida <- kmeans.espacial(data.final,
                           "./kmeans/METADATA_Kmeans.csv",
-                          k = 4)
+                          k = 10)
 
 print(salida)
 

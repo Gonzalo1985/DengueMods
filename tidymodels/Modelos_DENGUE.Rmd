@@ -1,0 +1,120 @@
+---
+title: "Modelos_Dengue - Training (nivel Nacional)"
+author: "Gonzalo M. Díaz"
+date: "2025-11-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Carga de librerías y autenticación
+
+Carga de librerías y autenticación con Google Drive para leer los datos de las planillas de casos de Dengue:
+
+library('AzureAuth')
+
+```{r}
+library('googledrive')
+library('stringr')
+library('readxl')
+library('sf')
+library('ggplot2')
+library('dplyr')
+
+# Conexión con la cuenta de Google Drive
+drive_auth()
+```
+
+## Lectura casos de Dengue desde el Google Drive
+
+Se levantan los datos de las las olas "históricas" utilizando la función load.epidemio.data:
+
+```{r}
+source("./load_epidemio_data.R")
+```
+
+Se descargan las olas previas, se abren en variable R y luego se eliminan de la carpeta local:
+
+```{r}
+ola.22.23 <- load.epidemio.data(wave = "19-20 a 22-23", week = "")
+ola.23.24 <- load.epidemio.data(wave = "23-24", week = "_v3")
+ola.24.25 <- load.epidemio.data(wave = "24-25", week = "30")
+
+file.remove(list.files(
+  path = "/home/gdiaz/Documentos/Desarrollos/DengueMods/tidymodels",
+  pattern = "\\.xlsx$",
+  full.names = TRUE))
+```
+
+## Estaciones meteorológicas por shp de regiones
+
+Se abren los shp que definen las regiones en donde se entrenarán modelos:
+
+```{r}
+shp.list <- list()
+shp.list <- lapply(X = list.files("/ms-36/hidro/shp/ALM_Regiones/",
+                                  pattern = ".shp", full.names = TRUE),
+                   FUN = st_read)
+```
+
+Se crea un data.frame con los departamentos que involucra cada región:
+
+```{r}
+regiones.list <- c()
+regiones.name <- list.files("/ms-36/hidro/shp/ALM_Regiones/", pattern = ".shp")
+for (i in 1:length(shp.list))
+{
+  aux <- data.frame(Region = shp.list[[i]]$NAME_2)
+  regiones.list <- append(regiones.list, aux)
+}
+names(regiones.list) <- regiones.name
+```
+
+Se busca los id de las estaciones que cae en cada región y se plotean las regiones juntos con los puntos de estaciones meteorológicas. Además, en celeste se marcan los partidos que han registrado casos de Dengue en la última ola:
+
+```{r}
+metadata.estaciones <- read.csv("../ESTACIONES_SMN.csv", skip = 1, header = FALSE)
+
+# se elimina VICTORICA para el Entrenamiento
+metadata.estaciones <- metadata.estaciones[-59,]
+
+colnames(metadata.estaciones) <- c("Provincia", "Estacion", "id", "lat", "lon", "alt")
+
+puntos.sf <- st_as_sf(metadata.estaciones, coords = c("lon", "lat"), crs = 4326)
+
+for(i in 1:length(shp.list)){
+  
+  pos <- which(shp.list[[i]]$NAME_2 %in% unique(ola.24.25$nombre_dep))
+  
+  shp.aux <- shp.list[[i]] %>%
+    mutate(resaltar = ifelse(
+      NAME_2 %in% regiones.list[[i]][pos], "Dengue SI", "Dengue NO")
+      )
+  
+  idx <- st_within(puntos.sf, shp.list[[i]])
+  puntos.inside <- puntos.sf[lengths(idx) > 0, ]
+  
+  f <- ggplot() + geom_sf(data = shp.list[[i]], fill = "lightgray", color = "black") +
+                  geom_sf(data = shp.aux, aes(fill = resaltar), color = "black") +
+                  geom_sf(data = puntos.inside, color = "black", size = 3) +
+                  geom_sf(data = puntos.inside, color = "green", size = 1) +
+                  theme_minimal() +
+                  labs(title = names(regiones.list)[i])
+  
+  print(f)
+  
+}
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

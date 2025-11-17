@@ -55,7 +55,7 @@ kmeans.espacial <- function(data = data, metadata = metadata, k = k)
       shape = "Cluster"
     ) +
     scale_fill_brewer(palette = "Set1") +
-    scale_shape_manual(values = c(21, 22, 23, 24, 25, 3, 4))
+    scale_shape_manual(values = c(21, 22, 23, 24, 25, 3, 4, 5, 6, 7))
   
   
   

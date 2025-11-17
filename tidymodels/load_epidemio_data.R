@@ -1,12 +1,5 @@
-library('googledrive')
-library('stringr')
-library('readxl')
 
-# Coenxiòn con la cuenta de Google Drive
-drive_auth()
-
-
-read.data.epidemio <- function(wave = "25-26", week = week)
+load.epidemio.data <- function(wave = "25-26", week = week)
 {
   folder.data <- drive_get(
     paste0("Repositorio/Epidemiologia/Casos Temp ", wave)
