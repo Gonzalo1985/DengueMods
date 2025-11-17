@@ -22,6 +22,7 @@ library('readxl')
 library('sf')
 library('ggplot2')
 library('dplyr')
+library('terra')
 
 # Conexión con la cuenta de Google Drive
 drive_auth()
@@ -72,7 +73,7 @@ for (i in 1:length(shp.list))
 names(regiones.list) <- regiones.name
 ```
 
-Se busca los id de las estaciones que cae en cada región y se plotean las regiones juntos con los puntos de estaciones meteorológicas. Además, en celeste se marcan los partidos que han registrado casos de Dengue en la última ola:
+Se abre el archivo de metadatos de las estaciones meteorológicas
 
 ```{r}
 metadata.estaciones <- read.csv("../ESTACIONES_SMN.csv", skip = 1, header = FALSE)
@@ -81,8 +82,40 @@ metadata.estaciones <- read.csv("../ESTACIONES_SMN.csv", skip = 1, header = FALS
 metadata.estaciones <- metadata.estaciones[-59,]
 
 colnames(metadata.estaciones) <- c("Provincia", "Estacion", "id", "lat", "lon", "alt")
+```
 
+Además, creamos una columna al metadato de estaciones con la distancia de Decorrelación de cada estación:
+
+```{r}
+dcorr.map <- rast("./DeCorr/Dist_corr_DEF_imerg_all_ar_1_0.2_g3_s0_qpe.tif")
+
+dcorr.series <- extract(dcorr.map, vect(cbind(metadata.estaciones$lon,
+                                              metadata.estaciones$lat)
+                                        ),
+                        ID = FALSE
+                        )
+
+metadata.estaciones <- cbind(metadata.estaciones, dcorr.series)
+
+colnames(metadata.estaciones) <- c("Provincia", "Estacion", "id", "lat", "lon", "alt",
+                                   "dcorr")
+
+metadata.estaciones[is.na(metadata.estaciones)] <- 0
+```
+
+Se busca los id de las estaciones que cae en cada región y se plotean las regiones juntos con los puntos de estaciones meteorológicas. Además, en celeste se marcan los partidos que han registrado casos de Dengue en la última ola:
+
+```{r}
 puntos.sf <- st_as_sf(metadata.estaciones, coords = c("lon", "lat"), crs = 4326)
+
+# Convertir puntos a CRS métrico
+puntos.sf.m <- st_transform(puntos.sf, 3857)
+
+# Crear buffer en metros usando la columna dcorr (km)
+puntos.buffer <- st_buffer(puntos.sf.m, dist = puntos.sf.m$dcorr * 1000)
+
+# Volver a CRS 4326
+puntos.buffer <- st_transform(puntos.buffer, 4326)
 
 for(i in 1:length(shp.list)){
   
@@ -95,9 +128,12 @@ for(i in 1:length(shp.list)){
   
   idx <- st_within(puntos.sf, shp.list[[i]])
   puntos.inside <- puntos.sf[lengths(idx) > 0, ]
+  buffers.inside <- puntos.buffer[lengths(idx) > 0, ]
   
   f <- ggplot() + geom_sf(data = shp.list[[i]], fill = "lightgray", color = "black") +
                   geom_sf(data = shp.aux, aes(fill = resaltar), color = "black") +
+                  geom_sf(data = buffers.inside, fill = NA, color = "black",
+                          linetype = "solid", size = 5) +              
                   geom_sf(data = puntos.inside, color = "black", size = 3) +
                   geom_sf(data = puntos.inside, color = "green", size = 1) +
                   theme_minimal() +
@@ -109,12 +145,4 @@ for(i in 1:length(shp.list)){
 
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## 
