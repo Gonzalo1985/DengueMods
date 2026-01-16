@@ -33,15 +33,15 @@ drive_auth()
 Se levantan los datos de las las olas "históricas" utilizando la función load.epidemio.data:
 
 ```{r}
-source("./load_epidemio_data.R")
+source("./tidymodels/fcts/load-epidemio-data.R")
 ```
 
 Se descargan las olas previas, se abren en variable R y luego se eliminan de la carpeta local:
 
 ```{r}
 ola.22.23 <- load.epidemio.data(wave = "19-20 a 22-23", week = "")
-ola.23.24 <- load.epidemio.data(wave = "23-24", week = "_v3")
-ola.24.25 <- load.epidemio.data(wave = "24-25", week = "30")
+ola.23.24 <- load.epidemio.data(wave = "23-24", week = 30)
+ola.24.25 <- load.epidemio.data(wave = "24-25", week = 30)
 
 file.remove(list.files(
   path = "/home/gdiaz/Documentos/Desarrollos/DengueMods/tidymodels",
@@ -67,7 +67,7 @@ regiones.list <- c()
 regiones.name <- list.files("/ms-36/hidro/shp/ALM_Regiones/", pattern = ".shp")
 for (i in 1:length(shp.list))
 {
-  aux <- data.frame(Region = shp.list[[i]]$NAME_2)
+  aux <- data.frame(Region = shp.list[[i]]$nam)
   regiones.list <- append(regiones.list, aux)
 }
 names(regiones.list) <- regiones.name
@@ -119,30 +119,81 @@ puntos.buffer <- st_transform(puntos.buffer, 4326)
 
 for(i in 1:length(shp.list)){
   
-  pos <- which(shp.list[[i]]$NAME_2 %in% unique(ola.24.25$nombre_dep))
+  pos <- which(shp.list[[i]]$nam %in% unique(ola.24.25$nombre_dep))
   
   shp.aux <- shp.list[[i]] %>%
     mutate(resaltar = ifelse(
-      NAME_2 %in% regiones.list[[i]][pos], "Dengue SI", "Dengue NO")
+      nam %in% regiones.list[[i]][pos], "Dengue SI", "Dengue NO")
       )
   
   idx <- st_within(puntos.sf, shp.list[[i]])
   puntos.inside <- puntos.sf[lengths(idx) > 0, ]
   buffers.inside <- puntos.buffer[lengths(idx) > 0, ]
-  
+    
   f <- ggplot() + geom_sf(data = shp.list[[i]], fill = "lightgray", color = "black") +
                   geom_sf(data = shp.aux, aes(fill = resaltar), color = "black") +
                   geom_sf(data = buffers.inside, fill = NA, color = "black",
                           linetype = "solid", size = 5) +              
-                  geom_sf(data = puntos.inside, color = "black", size = 3) +
-                  geom_sf(data = puntos.inside, color = "green", size = 1) +
+                  geom_sf(data = puntos.inside, color = "black", size = 1) +
+                  geom_sf(data = puntos.inside, color = "green", size = 0.5) +
                   theme_minimal() +
                   labs(title = names(regiones.list)[i])
   
+  # png(paste0(names(regiones.list)[i], ".png"),
+  #     width = 6, height = 4, units = "in", res = 300)
   print(f)
+  # dev.off()
   
 }
 
 ```
 
-## 
+## Departamentos dentro de cada círculo de influencia por estación
+
+Armado de lista de departamentos que se encuentran en el radio de influencia de cada estación. Los números de región son:
+
+-   Región 1 = Centro
+
+-   Región 2 = Cuyo
+
+-   Región 3 = NEA
+
+-   Región 4 = NOA
+
+-   Región 5 = Pampeana
+
+-   Región 6 = Patagonia
+
+```{r, warning=FALSE}
+
+Region = 6
+
+idx <- st_within(puntos.sf, shp.list[[Region]])
+puntos.inside <- puntos.sf[lengths(idx) > 0, ]
+buffers.inside <- puntos.buffer[lengths(idx) > 0, ]
+  
+# intersección de áreas de influencia con departamentos
+Deps.in.buffer <- st_intersects(buffers.inside, shp.list[[Region]])
+
+Lista.Estaciones <- c()
+
+# for que recorre estación dentro de región seleccionada
+for (j in 1:length(Deps.in.buffer)){
+  
+  Lista.Estaciones[[j]] <- c(buffers.inside$Estacion[j],
+                             shp.list[[Region]]$nam[Deps.in.buffer[[j]]]
+                             )
+  
+}
+
+# Buscar longitud máxima
+max.len <- max(sapply(Lista.Estaciones, length))
+
+# Rellenar con NA
+lista.pad <- lapply(Lista.Estaciones, function(x) c(x, rep(NA, max.len - length(x))))
+
+# Convertir a matriz
+mat <- do.call(rbind, lista.pad)
+
+
+```
