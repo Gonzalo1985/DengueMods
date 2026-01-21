@@ -3,10 +3,6 @@ DengueMods.Rproj
 .Rhistory
 ESTACIONES_SMN.csv
 Credentials_CRC.yml
-tidymodels/data/Cordoba_training_Casos-lag-4semanas.csv
-tidymodels/data/Cordoba_training_Casos-lag-2semanas.csv
-tidymodels/data/Cordoba_verification_Casos-lag-2semanas.csv
-tidymodels/data/Cordoba_verification.csv
 tidymodels/ESTACIONES_SMN_Regiones_v5.0.xls
 kmeans/ETP-ETR-ALM.csv
 kmeans/METADATA_Kmeans.csv
@@ -20,5 +16,5 @@ meteo/
 vectores/
 models/
 operativo/
-tidymodels/bhoa/
 tidymodels/DeCorr/
+tidymodels/data/
