@@ -4,6 +4,7 @@ library('readxl')
 library('googledrive')
 library('stringr')
 library('dplyr')
+library('tibble')
 
 source("./tidymodels/fcts/load-epidemio-data.R")
 source("./tidymodels/fcts/query-API-CRC.R")
@@ -12,10 +13,18 @@ source("./tidymodels/fcts/query-API-CRC.R")
 cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
 
 # Elección de región
-region <- "PAMPEANA" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
+region <- "CENTRO" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
 
+# Abre archivo con estaciones y regiones asociadas a cada estación
 reg.x.sta <- readxl::read_excel("tidymodels/ESTACIONES_SMN_Regiones_v5.0.xls",
                                 sheet = region)
+
+# Abre datos BHOA de todas las estaciones
+bhoa.data <- read.csv(
+  "./tidymodels/data/ETP-ETR-ALM.csv",
+  header = TRUE
+)
+bhoa.data$Fecha <- as.Date(bhoa.data$Fecha)
 
 # Se abren los datos epidemiológicos de todas las temporadas
 ola.19.23 <- load.epidemio.data(wave = "19-23", week = 30)
@@ -49,32 +58,31 @@ for (i in 1:nrow(reg.x.sta))
       .groups = "drop"
     )
   
+  print(nrow(casos.agrupados))
+  
   # Consulta datos meteorológicos
-  meteo.request <- ConsumirDatosEstacion(url.consulta = cfg[1],
-                                         usuario = cfg[2], clave = cfg[3],
-                                         fecha.inicial = '2022-07-31',
-                                         fecha.final = '2025-07-26',
-                                         id.estacion = reg.x.sta$NRO_ESTACION[i])
+  meteo.request <- ConsumirDatosEstacion(
+    url.consulta = cfg[1], usuario = cfg[2], clave = cfg[3],
+    fecha.inicial = '2022-07-31',
+    fecha.final = '2025-07-26',
+    id.estacion = reg.x.sta$NRO_ESTACION[i]
+    )
   
   # Cambio de formato a Date
   meteo.request$Fecha <- as.Date(meteo.request$Fecha)
   
-  # Consulta datos BHOA
-  bhoa.files <- list.files("./tidymodels/bhoa/")
-  bhoa.files <- tibble(nombre = bhoa.files)
-  bhoa.station <- bhoa.files %>%
-    filter(str_starts(nombre, id.station[i])) %>%
-    as.character()
-  bhoa.station <- read.csv(paste0("./tidymodels/bhoa/", bhoa.station))
-  
-  # Cambio de formato a Date
-  bhoa.station$Fecha <- as.Date(bhoa.station$Fecha)
+  # Captura de datos BHOA para la estación y período
+  bhoa.station <- bhoa.data %>%
+    dplyr::filter(
+      Nint == reg.x.sta$NRO_ESTACION[i],
+      Fecha >= "2022-07-31",
+      Fecha <= "2025-07-26"
+    )
+  # Elimina columna Nint
+  bhoa.station <- bhoa.station[,-1]
   
   # Datos meteorológicos y BHOA unificados en única variable
   data.station <- base::merge(meteo.request, bhoa.station, by = "Fecha")
   print(head(data.station))
-  
-  
-  
-  print(nrow(casos.agrupados))
+
 }
