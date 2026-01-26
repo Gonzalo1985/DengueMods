@@ -58,31 +58,15 @@ for (i in 1:nrow(reg.x.sta))
       .groups = "drop"
     )
   
-  print(nrow(casos.agrupados))
+  #print(nrow(casos.agrupados))
   
-  # Consulta datos meteorológicos
-  meteo.request <- ConsumirDatosEstacion(
-    url.consulta = cfg[1], usuario = cfg[2], clave = cfg[3],
-    fecha.inicial = '2022-07-31',
-    fecha.final = '2025-07-26',
-    id.estacion = reg.x.sta$NRO_ESTACION[i]
-    )
-  
-  # Cambio de formato a Date
-  meteo.request$Fecha <- as.Date(meteo.request$Fecha)
-  
-  # Captura de datos BHOA para la estación y período
-  bhoa.station <- bhoa.data %>%
-    dplyr::filter(
-      Nint == reg.x.sta$NRO_ESTACION[i],
-      Fecha >= "2022-07-31",
-      Fecha <= "2025-07-26"
-    )
-  # Elimina columna Nint
-  bhoa.station <- bhoa.station[,-1]
-  
-  # Datos meteorológicos y BHOA unificados en única variable
-  data.station <- base::merge(meteo.request, bhoa.station, by = "Fecha")
-  print(head(data.station))
+  data.station <- load.meteo.data(initial.date = '2022-07-31',
+                                  final.date = '2025-07-26',
+                                  url.serv = cfg[1],
+                                  user = cfg[2],
+                                  password = cfg[3],
+                                  nro.station = reg.x.sta$NRO_ESTACION[i],
+                                  bhoa.table = bhoa.data)
+  print(nrow(data.station))
 
 }
