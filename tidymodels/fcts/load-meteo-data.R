@@ -38,6 +38,18 @@ load.meteo.data <- function(initial.date = initial.date,
       1, nro.estacion, dplyr::everything()
     )
 
+  # 4 dias consecutivos con Tmin por debajo de un umbral
+  data.station <- data.station %>%
+    mutate(Tmin.count.4d = as.integer(rollapply(tmin, width = 4,
+                                                FUN = function(x) all(x < 18),
+                                                align = "right", fill = NA)))
+  
+  # 7 dias consecutivos con Tmin por debajo de un umbral
+  data.station <- data.station %>%
+    mutate(Tmin.count.7d = as.integer(rollapply(tmin, width = 7,
+                                                FUN = function(x) all(x < 18),
+                                                align = "right", fill = NA)))
+  
   return(data.station)
   
 }

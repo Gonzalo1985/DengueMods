@@ -14,7 +14,8 @@ source("./tidymodels/fcts/query-API-CRC.R")
 # Credenciales para API del CRC-SAS
 cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
 
-# Elección de región
+# Elección de región y variable final
+data.training.region <- c()
 region <- "NOA" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
 
 # Abre archivo con estaciones y regiones asociadas a cada estación
@@ -72,19 +73,6 @@ for (i in 1:nrow(reg.x.sta))
                                         password = cfg[3],
                                         nro.station = reg.x.sta$NRO_ESTACION[i],
                                         bhoa.table = bhoa.data)
-  
-  # 4 dias consecutivos con Tmin por debajo de un umbral
-  data.meteo.station <- data.meteo.station %>%
-    mutate(Tmin.count.4d = as.integer(rollapply(tmin, width = 4,
-                                                FUN = function(x) all(x < 18),
-                                                align = "right", fill = NA)))
-  
-  # 7 dias consecutivos con Tmin por debajo de un umbral
-  data.meteo.station <- data.meteo.station %>%
-    mutate(Tmin.count.7d = as.integer(rollapply(tmin, width = 7,
-                                                FUN = function(x) all(x < 18),
-                                                align = "right", fill = NA)))
-  
   print(nrow(data.meteo.station))
   
   # Armado de base semanal de datos meteorológicos y de bhoa
@@ -103,6 +91,26 @@ for (i in 1:nrow(reg.x.sta))
               tmin.count.7d = sum(Tmin.count.7d, na.rm = TRUE))
   
   # Unificación de bases meteo/bhoa con epidemiológica
-  data.epidemio.meteo <- cbind(olas.agrupadas, data.meteo.grouped[,2:10])
+  data.epidemio.meteo <- cbind(
+    c(olas.agrupadas$ANIO_SEPI_MIN[3:nrow(olas.agrupadas)], "25/31", "25/32"),
+    olas.agrupadas,
+    data.meteo.grouped[,2:10]
+    )
+  colnames(data.epidemio.meteo)[1:2] <- c("Semana.Prono", "Semana.Obs.Epidemio")
 
+  # Armado de base lagueada
+  data.lagged <- cbind(
+    c(olas.agrupadas$ANIO_SEPI_MIN[3:nrow(olas.agrupadas)], "25/31", "25/32"),
+    olas.agrupadas,
+    data.meteo.grouped$nro.estacion,
+    rbind(NA,NA, data.meteo.grouped[1:154,3:10])
+  )
+  colnames(data.lagged)[1:2] <- c("Semana.Prono", "Semana.Obs.Epidemio")
+  colnames(data.lagged)[5] <- c("nro.estacion")
+  
+  # Base final para entrenar por región
+  data.training.region <- rbind(data.training.region, data.lagged)
 }
+
+
+
