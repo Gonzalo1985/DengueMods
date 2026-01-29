@@ -16,7 +16,7 @@ cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
 
 # Elección de región y variable final
 data.training.region <- c()
-region <- "NOA" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
+region <- "CENTRO" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
 
 # Abre archivo con estaciones y regiones asociadas a cada estación
 reg.x.sta <- readxl::read_excel("tidymodels/ESTACIONES_SMN_Regiones_v5.0.xls",
@@ -85,6 +85,7 @@ for (i in 1:nrow(reg.x.sta))
               ETR = mean(ETR.mm., na.rm = TRUE),
               ALM = mean(ALM.mm., na.rm = TRUE),
               prcp = sum(prcp, na.rm = TRUE),
+              prcp.1m = sum(Prcp.1m, na.rm = TRUE),
               tmin = mean(tmin, na.rm = TRUE),
               hr = mean(hr, na.rm = TRUE),
               tmin.count.4d = sum(Tmin.count.4d, na.rm = TRUE),
@@ -92,24 +93,24 @@ for (i in 1:nrow(reg.x.sta))
   
   # Unificación de bases meteo/bhoa con epidemiológica
   data.epidemio.meteo <- cbind(
-    c(olas.agrupadas$ANIO_SEPI_MIN[3:nrow(olas.agrupadas)], "25/31", "25/32"),
     olas.agrupadas,
-    data.meteo.grouped[,2:10]
+    data.meteo.grouped[,2:11]
     )
-  colnames(data.epidemio.meteo)[1:2] <- c("Semana.Prono", "Semana.Obs.Epidemio")
+  colnames(data.epidemio.meteo)[1] <- "Semana.Obs.Epidemio"
 
   # Armado de base lagueada
   data.lagged <- cbind(
-    c(olas.agrupadas$ANIO_SEPI_MIN[3:nrow(olas.agrupadas)], "25/31", "25/32"),
-    olas.agrupadas,
+    olas.agrupadas[,c(1,2)],
+    c(NA, NA, olas.agrupadas$Total[1:154]),
     data.meteo.grouped$nro.estacion,
-    rbind(NA,NA, data.meteo.grouped[1:154,3:10])
+    rbind(NA,NA, data.meteo.grouped[1:154,3:11])
   )
-  colnames(data.lagged)[1:2] <- c("Semana.Prono", "Semana.Obs.Epidemio")
-  colnames(data.lagged)[5] <- c("nro.estacion")
+  colnames(data.lagged)[c(1,3)] <- c("Semana.Obs.Epidemio", "Total")
+  colnames(data.lagged)[4] <- "nro.estacion"
   
   # Base final para entrenar por región
   data.training.region <- rbind(data.training.region, data.lagged)
+  data.training.region[data.training.region == -99.9] <- NA
 }
 
 

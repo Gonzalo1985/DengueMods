@@ -3,22 +3,22 @@ library('tidymodels')
 library("corrplot")
 
 
-
 training <- read.csv("./tidymodels/Cordoba_training_Casos-lag-2semanas.csv")
 verification <- read.csv("./tidymodels/Cordoba_verification.csv")
 
 # solo se queda con los lag2
-training <- training[, -seq(4,19,1)]
-training <- training[, -c(12,13,15,16)]
+#training <- training[, -seq(4,19,1)]
+#training <- training[, -c(12,13,15,16)]
 
+training <- data.training.region
 
 # Exploring data
 training.longer <- training %>%
-  select(Semana, Casos, 3:13) %>%
-  pivot_longer(3:13, names_to = "variables")
+  select(Semana.Obs.Epidemio, Autóctono, c(3,5:13)) %>%
+  pivot_longer(c(3:12), names_to = "variables")
 
 training.longer %>%
-  ggplot(aes(value, Casos, color = variables)) +
+  ggplot(aes(value, Autóctono, color = variables)) +
   geom_point() +
   #scale_x_log10() +
   scale_y_log10() +
@@ -26,7 +26,7 @@ training.longer %>%
 
 colores_suaves <- colorRampPalette(c("#FF9999", "#FFFFFF", "#9999FF"))
 
-corrplot(cor(training[,2:13]), 
+corrplot(cor(training[,2:13], use = 'complete.obs'), 
          method = "circle",        # Círculos
          type = "full",            # Mostrar matriz completa
          addCoef.col = "black",    # Agregar valores en negro

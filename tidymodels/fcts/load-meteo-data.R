@@ -38,6 +38,11 @@ load.meteo.data <- function(initial.date = initial.date,
       1, nro.estacion, dplyr::everything()
     )
 
+  # precipitación mensual (últimos 28 días)
+  data.station <- data.station %>%
+    mutate(Prcp.1m = rollapply(prcp, width = 28, FUN = sum,
+                               align = "right", fill = NA))
+  
   # 4 dias consecutivos con Tmin por debajo de un umbral
   data.station <- data.station %>%
     mutate(Tmin.count.4d = as.integer(rollapply(tmin, width = 4,
