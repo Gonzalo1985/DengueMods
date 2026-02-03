@@ -40,24 +40,28 @@ corrplot(cor(training[,2:13], use = 'complete.obs'),
 # Data spliting
 set.seed(123)
 training <- training %>%
-  mutate(Casos.log = ifelse(Casos == 0, 0, log10(Casos)))
+  mutate(Autóctono.log = ifelse(Autóctono == 0, 0, log10(Autóctono)))
 
-data.split <- initial_split(training, strata = Casos, prop = 0.8)
+data.split <- initial_split(training, strata = Autóctono, prop = 0.8)
 training.data <- training(data.split)
 testing.data <- testing(data.split)
 # ------------------------------------------------------------------------------
 
-dengue.folds <- vfold_cv(training.data, v = 40, strata = Casos)
+dengue.folds <- vfold_cv(training.data, v = 40, strata = Autóctono)
 
 # ------------------------------------------------------------------------------
 # Building model ----
 data.recipe <- 
-  recipe(formula = Casos.log ~
-           Semana + Casos.lag +
-           Tmin.Count.4d.lag2 + 
-           Tmin.Count.7d.lag2 +
-           Almc.lag2, data = training.data) %>%
-  update_role(Semana, new_role = "ID")
+  recipe(formula = Autóctono.log ~
+           Semana.Obs.Epidemio + Total +
+           ETP + ETR + ALM +
+           prcp + prcp.1m +
+           tmin + hr +
+           tmin.count.4d + 
+           tmin.count.7d,
+         data = training.data) %>%
+  step_naomit(all_predictors(), all_outcomes()) %>%
+  update_role(Semana.Obs.Epidemio, new_role = "ID")
 
 rf.mod <- 
   rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>% 
