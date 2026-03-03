@@ -16,7 +16,7 @@ cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
 
 # Elección de región y variable final
 data.training.region <- c()
-region <- "CENTRO" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
+region <- "CUYO" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
 
 # Abre archivo con estaciones y regiones asociadas a cada estación
 reg.x.sta <- readxl::read_excel("tidymodels/ESTACIONES_SMN_Regiones_v5.0.xls",
