@@ -15,8 +15,8 @@ source("./tidymodels/fcts/query-API-CRC.R")
 cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
 
 # Elección de región y variable final
-data.training.region <- c()
-region <- "CUYO" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
+data.verification.region <- c()
+region <- "CENTRO" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
 
 # Abre archivo con estaciones y regiones asociadas a cada estación
 reg.x.sta <- readxl::read_excel("tidymodels/ESTACIONES_SMN_Regiones_v5.0.xls",
@@ -29,12 +29,12 @@ bhoa.data <- read.csv(
 )
 bhoa.data$Fecha <- as.Date(bhoa.data$Fecha)
 
-# Se abren los datos epidemiológicos de todas las temporadas
-ola.19.23 <- load.epidemio.data(wave = "19-23", week = 30)
-ola.23.24 <- load.epidemio.data(wave = "23-24", week = 30)
-ola.24.25 <- load.epidemio.data(wave = "24-25", week = 30)
-olas.training <- rbind(ola.19.23, ola.23.24, ola.24.25)
-rm(ola.19.23) ; rm(ola.23.24) ; rm(ola.24.25)
+# Se abren los datos epidemiológicos de la última temporada
+ola.25.26 <- load.epidemio.data(wave = "25-26", week = 13)
+olas.training <- ola.25.26
+rm(ola.25.26)
+
+#reg.x.sta <- reg.x.sta[-2,]
 
 
 for (i in 1:nrow(reg.x.sta))

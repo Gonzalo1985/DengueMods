@@ -2,15 +2,7 @@ rm(list = ls())
 library('tidymodels')
 library("corrplot")
 
-
-training <- read.csv("./tidymodels/Cordoba_training_Casos-lag-2semanas.csv")
-verification <- read.csv("./tidymodels/Cordoba_verification.csv")
-
-# solo se queda con los lag2
-#training <- training[, -seq(4,19,1)]
-#training <- training[, -c(12,13,15,16)]
-
-training <- data.training.region
+training <- read.csv("./output.csv")
 
 # Exploring data
 training.longer <- training %>%
@@ -98,60 +90,28 @@ rf.tuning <-
   tune_grid(rf.workflow,
             resamples = dengue.folds,
             grid = 50, control = control_grid(save_workflow = TRUE))
+saveRDS(rf.tuning, "PATAGONIA_rf_tuning.rds")
 
 glmn.tuning <-
   tune_grid(glmn.workflow,
             resamples = dengue.folds,
             grid = 50, control = control_grid(save_workflow = TRUE))
+saveRDS(glmn.tuning, "PATAGONIA_glmn_tuning.rds")
 
 svm.tuning <-
   tune_grid(svm.workflow,
             resamples = dengue.folds,
             grid = 50, control = control_grid(save_workflow = TRUE))
+saveRDS(svm.tuning, "PATAGONIA_svm_tuning.rds")
 
 rf.fit <- fit_best(rf.tuning, verbose = TRUE)
 glmn.fit <- fit_best(glmn.tuning, verbose = TRUE)
 svm.fit <- fit_best(svm.tuning, verbose = TRUE)
 
-#training.pred <- predict(rf.fit, training.data)
-#testing.pred <- predict(rf.fit, testing.data)
-
 ## Explore results
 show_best(rf.tuning, metric = "rmse")
 autoplot(rf.tuning)
 
-rf.fit.final <- rf.workflow %>%
-  finalize_workflow(select_best(rf.tuning))
 
-glmn.fit.final <- glmn.workflow %>%
-  finalize_workflow(select_best(glmn.tuning))
-
-# ¿Qué resuelve last_fit con respecto al testing?
-rf.fit <- last_fit(rf.fit.final, data.split)
-glmn.fit <- last_fit(glmn.fit.final, data.split)
-
-collect_predictions(dengue.fit) %>%
-  ggplot(aes(Casos.log, .pred)) +
-  geom_abline(lty = 2, color = "gray50") +
-  geom_point(alpha = 0.5, color = "midnightblue") +
-  coord_fixed()
-
- fig <- ggplot() +
-   geom_line(data = out, aes(x = SE, y = Obs.Autoc, group = 1, colour = "Casos"), size = 0.8, linetype = "dashed") +
-   geom_point(data = out, aes(x = SE, y = Obs.Autoc, group = 1, colour = "Casos")) +
-   geom_line(data = out, aes(x = SE, y = .pred, group = 2, colour = "Random Forest"), size = 1) +
-   geom_point(data = out, aes(x = SE, y = .pred, group = 2, colour = "Random Forest")) +
-   geom_line(data = out, aes(x = SE, y = .pred.1, group = 3, colour = "GLMN"), size = 1) +
-   geom_point(data = out, aes(x = SE, y = .pred.1, group = 3, colour = "GLMN")) +
-   geom_line(data = out, aes(x = SE, y = .pred.2, group = 3, colour = "SVM"), size = 1) +
-   geom_point(data = out, aes(x = SE, y = .pred.2, group = 3, colour = "SVM")) +
-   labs(y = "Casos Dengue") +
-   theme_bw() +
-   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 14)) +
-   coord_cartesian(ylim = c(0, 250)) +
-   scale_colour_manual(values = c("Casos" = "#431901", 
-                                  "Random Forest" = "#3b7861", 
-                                  "GLMN" = "#5564eb",
-                                  "SVM" = "#B87E14"))
 
 
