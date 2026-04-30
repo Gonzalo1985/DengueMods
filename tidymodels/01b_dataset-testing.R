@@ -31,7 +31,7 @@ bhoa.data$Fecha <- as.Date(bhoa.data$Fecha)
 
 # Se abren los datos epidemiológicos de la última temporada
 ola.25.26 <- load.epidemio.data(wave = "25-26", week = 13)
-olas.training <- ola.25.26
+ola.testing <- ola.25.26
 rm(ola.25.26)
 
 #reg.x.sta <- reg.x.sta[-2,]
@@ -47,10 +47,10 @@ for (i in 1:nrow(reg.x.sta))
     .[. != "NA"]
  
   # Números de filas de los Departamentos en la variable olas anteriores
-  filas.deptos <- which(olas.training$COD_DEPTO %in% cod.depto == TRUE)
+  filas.deptos <- which(ola.testing$COD_DEPTO %in% cod.depto == TRUE)
   
   # Casos de los Departamentos asociados a la estación de referencia
-  olas.por.deptos <- olas.training[filas.deptos,]
+  olas.por.deptos <- ola.testing[filas.deptos,]
   
   # Agrupado de todos los datos por SE por departamento (Autóctonos y Totales)
   olas.agrupadas <- olas.por.deptos %>%
@@ -60,14 +60,14 @@ for (i in 1:nrow(reg.x.sta))
       Total = sum(Total_confirmados, na.rm = TRUE),
       .groups = "drop"
     )
-  olas.agrupadas <- olas.agrupadas[which(olas.agrupadas$ANIO_SEPI_MIN == "22/31"):
-                                     which(olas.agrupadas$ANIO_SEPI_MIN == "25/30"),
+  olas.agrupadas <- olas.agrupadas[which(olas.agrupadas$ANIO_SEPI_MIN == "25/31"):
+                                     which(olas.agrupadas$ANIO_SEPI_MIN == "26/12"),
                                    ]
   
   
   # Armado de base de datos meteorológicos y de bhoa
-  data.meteo.station <- load.meteo.data(initial.date = '2022-07-31',
-                                        final.date = '2025-07-26',
+  data.meteo.station <- load.meteo.data(initial.date = '2025-07-27',
+                                        final.date = '2026-03-28',
                                         url.serv = cfg[1],
                                         user = cfg[2],
                                         password = cfg[3],
