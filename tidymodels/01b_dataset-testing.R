@@ -15,8 +15,8 @@ source("./tidymodels/fcts/query-API-CRC.R")
 cfg <- config::get(file = "./Credentials_CRC.yml", value = "Credentials")
 
 # Elección de región y variable final
-data.verification.region <- c()
-region <- "CENTRO" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
+data.testing.region <- c()
+region <- "NEA" # CENTRO, CUYO, NEA, NOA, PAMPEANA, PATAGONIA
 
 # Abre archivo con estaciones y regiones asociadas a cada estación
 reg.x.sta <- readxl::read_excel("tidymodels/ESTACIONES_SMN_Regiones_v5.0.xls",
@@ -30,7 +30,7 @@ bhoa.data <- read.csv(
 bhoa.data$Fecha <- as.Date(bhoa.data$Fecha)
 
 # Se abren los datos epidemiológicos de la última temporada
-ola.25.26 <- load.epidemio.data(wave = "25-26", week = 13)
+ola.25.26 <- load.epidemio.data(wave = "25-26", week = 17)
 ola.testing <- ola.25.26
 rm(ola.25.26)
 
@@ -76,7 +76,7 @@ for (i in 1:nrow(reg.x.sta))
   print(nrow(data.meteo.station))
   
   # Armado de base semanal de datos meteorológicos y de bhoa
-  data.meteo.station$Semana <- sort(rep(1:156,7))
+  data.meteo.station$Semana <- sort(rep(1:35,7))
   
   data.meteo.grouped <- data.meteo.station %>%
     group_by(Semana) %>%
@@ -101,16 +101,16 @@ for (i in 1:nrow(reg.x.sta))
   # Armado de base lagueada
   data.lagged <- cbind(
     olas.agrupadas[,c(1,2)],
-    c(NA, NA, olas.agrupadas$Total[1:154]),
+    c(NA, NA, olas.agrupadas$Total[1:33]),
     data.meteo.grouped$nro.estacion,
-    rbind(NA,NA, data.meteo.grouped[1:154,3:11])
+    rbind(NA,NA, data.meteo.grouped[1:33,3:11])
   )
   colnames(data.lagged)[c(1,3)] <- c("Semana.Obs.Epidemio", "Total")
   colnames(data.lagged)[4] <- "nro.estacion"
   
   # Base final para entrenar por región
-  data.training.region <- rbind(data.training.region, data.lagged)
-  data.training.region[data.training.region == -99.9] <- NA
+  data.testing.region <- rbind(data.testing.region, data.lagged)
+  data.testing.region[data.testing.region == -99.9] <- NA
 }
 
 
